@@ -300,11 +300,9 @@ public class AccelerometerService extends SensorService implements
    *
    * @param accelerometerReadings the x, y, and z accelerometer readings
    */
-  public void broadcastAccelerometerReading(
-    final long timestamp,
-    final float[] accelerometerReadings) {
-
+  public void broadcastAccelerometerReading(final long timestamp, final float[] accelerometerReadings) {
     Intent intent = new Intent();
+    intent.putExtra(Constants.KEY.TIMESTAMP, timestamp);
     intent.putExtra(Constants.KEY.ACCELEROMETER_DATA, accelerometerReadings);
     intent.setAction(Constants.ACTION.BROADCAST_ACCELEROMETER_DATA);
     LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
