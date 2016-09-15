@@ -271,8 +271,8 @@ public class AccelerometerService extends SensorService implements
         "MOBILE",
         "",
         timestamp_in_milliseconds,
-        event.values)
-      );
+        event.values
+      ));
 
       //TODO: broadcast the accelerometer reading to the UI
       broadcastAccelerometerReading(timestamp_in_milliseconds, event.values);
