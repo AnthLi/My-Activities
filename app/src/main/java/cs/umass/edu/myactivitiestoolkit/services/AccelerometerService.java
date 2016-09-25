@@ -165,8 +165,6 @@ public class AccelerometerService extends SensorService implements
         }
         catch (JSONException e) {
           e.printStackTrace();
-
-          return;
         }
 
         // TODO : broadcast activity to UI
@@ -269,7 +267,7 @@ public class AccelerometerService extends SensorService implements
       long timestamp_in_milliseconds = (long)((double)event.timestamp / Constants.TIMESTAMPS.NANOSECONDS_PER_MILLISECOND);
 
       // Filter the event values
-      filter = new Filter(10.0);
+      filter = new Filter(15.0);
       double[] filteredValues = filter.getFilteredValues(event.values);
       float[] filteredFloatValues = new float[filteredValues.length];
 
@@ -278,19 +276,19 @@ public class AccelerometerService extends SensorService implements
       }
 
       // TODO: Send the accelerometer reading to the server
-//      Log.d(
-//        TAG,
-//        "X: " + filteredFloatValues[0] +
-//          ", Y: " + filteredFloatValues[1] +
-//          ", Z: " + filteredFloatValues[2]
-//      );
+      Log.d(
+        TAG,
+        "X: " + filteredFloatValues[0] +
+          ", Y: " + filteredFloatValues[1] +
+          ", Z: " + filteredFloatValues[2]
+      );
 
       mClient.sendSensorReading(new AccelerometerReading(
         mUserID,
         "MOBILE",
         "",
         timestamp_in_milliseconds,
-        event.values
+        filteredFloatValues
       ));
 
       // TODO: broadcast the accelerometer reading to the UI
@@ -301,7 +299,7 @@ public class AccelerometerService extends SensorService implements
 
       // we received a step event detected by the built-in Android step
       // detector (assignment 1)
-      broadcastAndroidStepCount(mAndroidStepCount++);
+      broadcastAndroidStepCount(mAndroidStepCount);
     }
     else {
       // cannot identify sensor type
