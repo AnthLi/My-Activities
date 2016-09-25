@@ -1,13 +1,13 @@
 /**
- * 
+ *
  */
 package cs.umass.edu.myactivitiestoolkit.processing;
 
 /**
  * <p>This class provides the implementation for Butterworth and Exponential Smoothing Filter</p>
- * 
+ *
  * @author cs390mb
- * 
+ *
  */
 public class Filter {
 
@@ -15,24 +15,24 @@ public class Filter {
 		BUTTERWORTH,
 		SMOOTHING
 	};
-	
+
 	private int SAMPLE_RATE = 30;
-	
+
 	private FilterType FILTER_TYPE = FilterType.SMOOTHING;
-	
+
 	private int SMOOTH_FACTOR = 2;
-	
+
 	private double CUTOFF_FREQUENCY = 1.0;
-	
+
 	private double ax[] = new double[3];
 	private double by[] = new double[3];
-	
+
 	private double xv[][] = null;
 	private double yv[][] = null;
-	
+
 	private double expectedValue[] =null;
 	private static final double INVALID = Double.NEGATIVE_INFINITY;
-	
+
 	private static final int NUM_ACCEL_FIELDS = 3;
 
 	/**
@@ -44,7 +44,7 @@ public class Filter {
 		SMOOTH_FACTOR = (smoothFactor>=1?smoothFactor:1);
 		expectedValue = new double[NUM_ACCEL_FIELDS];
 	}
-	
+
 	/**
 	 * Use this constructor to use a Butterworth filter.
 	 * @param cutoffFrequency the frequency threshold for smoothing.
@@ -56,8 +56,8 @@ public class Filter {
 		yv = new double[NUM_ACCEL_FIELDS][3];
 		getLPCoefficientsButterworth2Pole(SAMPLE_RATE, CUTOFF_FREQUENCY);
 	}
-	
-	
+
+
 	/**
 	 * Filters the current accelerometer reading.
 	 * @param values the accelerometer values along the x, y and z axes
@@ -83,7 +83,7 @@ public class Filter {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Filter using butterworth filter
 	 * @param sample
@@ -101,7 +101,7 @@ public class Filter {
 
 		return yv[filterIndex][0];
 	}
-	
+
 	/**
 	 * Filter using Smoothing Filter
 	 * @param sample
@@ -118,7 +118,7 @@ public class Filter {
 			return expectedValue[filterIndex];
 		}
 	}
-	
+
 	/**
 	 * Get Butterworth 2 Pole LPC Coefficients
 	 * @param SAMPLE_RATE
@@ -140,9 +140,9 @@ public class Filter {
 		ax[1] = 2 * gain;
 		ax[2] = 1 * gain;
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 }

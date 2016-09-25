@@ -17,6 +17,7 @@ import java.util.Locale;
 
 import cs.umass.edu.myactivitiestoolkit.R;
 import cs.umass.edu.myactivitiestoolkit.constants.Constants;
+import cs.umass.edu.myactivitiestoolkit.processing.Filter;
 import cs.umass.edu.myactivitiestoolkit.steps.StepDetector;
 import edu.umass.cs.MHLClient.client.MessageReceiver;
 import edu.umass.cs.MHLClient.client.MobileIOClient;
@@ -116,6 +117,8 @@ public class AccelerometerService extends SensorService implements
    */
   private int mAndroidStepCount = 0;
 
+  private Filter filter;
+
   public AccelerometerService() {
     mStepDetector = new StepDetector();
   }
@@ -179,6 +182,7 @@ public class AccelerometerService extends SensorService implements
     // TODO : (Assignment 0)
     // Register the accelerometer sensor from the sensor manager.
     mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+
     mAccelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     mSensorManager.registerListener(
       this,
@@ -189,6 +193,12 @@ public class AccelerometerService extends SensorService implements
     // TODO : (Assignment 1)
     // Register your step detector. Register an OnStepListener to receive step
     // events
+    mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+    mSensorManager.registerListener(
+      this,
+      mStepSensor,
+      mSensorManager.SENSOR_DELAY_NORMAL
+    );
   }
 
   /**
@@ -258,13 +268,22 @@ public class AccelerometerService extends SensorService implements
       // convert the timestamp to milliseconds (note this is not in Unix time)
       long timestamp_in_milliseconds = (long)((double)event.timestamp / Constants.TIMESTAMPS.NANOSECONDS_PER_MILLISECOND);
 
-      //TODO: Send the accelerometer reading to the server
-      Log.d(
-        TAG,
-        "X: " + event.values[0] +
-          ", Y: " + event.values[1] +
-          ", Z: " + event.values[2]
-      );
+      // Filter the event values
+      filter = new Filter(10.0);
+      double[] filteredValues = filter.getFilteredValues(event.values);
+      float[] filteredFloatValues = new float[filteredValues.length];
+
+      for (int i = 0; i < filteredValues.length; i++) {
+        filteredFloatValues[i] = (float)filteredValues[i];
+      }
+
+      // TODO: Send the accelerometer reading to the server
+//      Log.d(
+//        TAG,
+//        "X: " + filteredFloatValues[0] +
+//          ", Y: " + filteredFloatValues[1] +
+//          ", Z: " + filteredFloatValues[2]
+//      );
 
       mClient.sendSensorReading(new AccelerometerReading(
         mUserID,
@@ -274,8 +293,9 @@ public class AccelerometerService extends SensorService implements
         event.values
       ));
 
-      //TODO: broadcast the accelerometer reading to the UI
-      broadcastAccelerometerReading(timestamp_in_milliseconds, event.values);
+      // TODO: broadcast the accelerometer reading to the UI
+      broadcastAccelerometerReading(timestamp_in_milliseconds, filteredFloatValues);
+      broadcastStepDetected(timestamp_in_milliseconds, filteredFloatValues);
     }
     else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
 
