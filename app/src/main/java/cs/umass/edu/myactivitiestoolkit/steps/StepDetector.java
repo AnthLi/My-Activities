@@ -9,6 +9,16 @@ import java.util.ArrayList;
 
 import cs.umass.edu.myactivitiestoolkit.processing.Filter;
 
+class EventTuple {
+  public long timeStamp;
+  public float[] values;
+
+  public EventTuple(long t, float[] v){
+    timeStamp = t;
+    values = v;
+  }
+}
+
 /**
  * This class is responsible for detecting steps from the accelerometer sensor.
  * All {@link OnStepListener step listeners} that have been registered will
@@ -63,6 +73,57 @@ public class StepDetector implements SensorEventListener {
     mStepListeners.clear();
   }
 
+  // Size of data to collect for step detection
+  private final int window = 20;
+  private ArrayList<EventTuple> sampleData = new ArrayList<EventTuple>();
+
+  private boolean stepDetected(EventTuple event) {
+    if (sampleData.size() < window) {
+      sampleData.add(event);
+    }
+    else {
+      //if the array has hit out desired size of the sample window...
+      //detect movement by change of z value
+      float base = 9.8f;
+      float offset = 4f;
+      boolean dipBelow = false;
+      boolean dipAbove = false;
+      //if first data point is greater base line
+      if (sampleData.get(0).values[2] >= base) {
+        dipAbove = true;
+      }
+      //if the first data point is beneath the base
+      else {
+        dipBelow = true;
+      }
+
+      int i = 0;
+      while (i < sampleData.size()) {
+        if (dipAbove) {
+          //should have already broadcast, so we are waiting for the trend to go back down
+          if (sampleData.get(i).values[2] < base+offset) {
+            Log.d(TAG, String.valueOf(sampleData.get(i).values[2]));
+            dipBelow = true;
+            dipAbove = false;
+          }
+        }
+        else {
+          if (sampleData.get(i).values[2] > base + offset) {
+            Log.d(TAG, String.valueOf(sampleData.get(i).values[2]));
+            dipAbove = true;
+            dipBelow = false;
+          }
+        }
+
+        i++;
+      }
+
+      sampleData = new ArrayList<EventTuple>();
+    }
+
+    return false;
+  }
+
   /**
    * Here is where you will receive accelerometer readings, buffer them if necessary
    * and run your step detection algorithm. When a step is detected, call
@@ -77,6 +138,25 @@ public class StepDetector implements SensorEventListener {
     if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
       // TODO: Detect steps! Call onStepDetected(...) when a step is detected.
 
+      // Filter the event values
+      filter = new Filter(10.0);
+      double[] filteredValues = filter.getFilteredValues(event.values);
+      float[] filteredFloatValues = new float[filteredValues.length];
+
+      for (int i = 0; i < filteredValues.length; i++) {
+        filteredFloatValues[i] = (float)filteredValues[i];
+      }
+
+//      if (stepDetected(new EventTuple(event.timestamp, filteredFloatValues))) {
+//        onStepDetected(event.timestamp, filteredFloatValues);
+//      }
+
+      Log.d(
+        TAG,
+        "X: " + event.values[0] +
+          ", Y: " + event.values[1] +
+          ", Z: " + event.values[2]
+      );
     }
   }
 
@@ -91,15 +171,6 @@ public class StepDetector implements SensorEventListener {
    * of the current step count.
    */
   private void onStepDetected(long timestamp, float[] values) {
-    // Filter the event values
-    filter = new Filter(10.0);
-    double[] filteredValues = filter.getFilteredValues(values);
-    float[] filteredFloatValues = new float[filteredValues.length];
-
-    for (int i = 0; i < filteredValues.length; i++) {
-      filteredFloatValues[i] = (float)filteredValues[i];
-    }
-
     stepCount++;
     for (OnStepListener stepListener : mStepListeners) {
       stepListener.onStepDetected(timestamp, values);

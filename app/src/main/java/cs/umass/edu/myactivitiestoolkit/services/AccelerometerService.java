@@ -83,17 +83,6 @@ import java.util.ArrayList;
  * @see SensorEvent
  * @see MobileIOClient
  */
-
-class EventTuple {
-    public long timeStamp;
-    public float[] values;
-    public EventTuple(long t, float[] v){
-        timeStamp = t;
-        values = v;
-    }
-}
-
-
 public class AccelerometerService extends SensorService implements
   SensorEventListener {
 
@@ -220,6 +209,7 @@ public class AccelerometerService extends SensorService implements
     // unregisterListener method.
     if (mSensorManager != null) {
       mSensorManager.unregisterListener(this, mAccelerometerSensor);
+      mSensorManager.unregisterListener(this, mStepSensor);
     }
   }
 
@@ -270,50 +260,6 @@ public class AccelerometerService extends SensorService implements
    * @see SensorEvent
    * @see #broadcastAccelerometerReading(long, float[])
    */
-  final int window = 20;
-  ArrayList<EventTuple> sampleData = new ArrayList<EventTuple>();
-
-  public void processData(EventTuple event){
-    if (sampleData.size() < window){
-      sampleData.add(event);
-    }
-    else{
-      //if the array has hit out desired size of the sample window...
-      //detect movement by change of z value
-        float base = 9.8f;
-        float offset = 1f;
-        boolean dipBelow = false;
-        boolean dipAbove = false;
-        //if first data point is greater base line
-        if(sampleData.get(0).values[2] >= base)
-            dipAbove = true;
-        //if the first data point is beneath the base
-        else
-            dipBelow = true;
-        int i = 0;
-        while (i < sampleData.size()) {
-            if(dipAbove){
-                //should have already broadcast, so we are waiting for the trend to go back down
-                if(sampleData.get(i).values[2] < base+offset){
-                    dipBelow = true;
-                    dipAbove = false;
-                    //broadcast step
-                    long timestamp_in_milliseconds = (long)((double)sampleData.get(i).timeStamp / Constants.TIMESTAMPS.NANOSECONDS_PER_MILLISECOND);
-                    broadcastStepDetected(timestamp_in_milliseconds, sampleData.get(i).values);
-                    broadcastAndroidStepCount(mAndroidStepCount++);
-                }
-            }
-            else{
-                if(sampleData.get(i).values[2] > base+offset){
-                    dipAbove = true;
-                    dipBelow = false;
-                }
-            }
-            i++;
-        }
-    }
-
-  }
 
   @Override
   public void onSensorChanged(SensorEvent event) {
@@ -322,7 +268,7 @@ public class AccelerometerService extends SensorService implements
       long timestamp_in_milliseconds = (long)((double)event.timestamp / Constants.TIMESTAMPS.NANOSECONDS_PER_MILLISECOND);
 
       // Filter the event values
-      filter = new Filter(15.0);
+      filter = new Filter(10.0);
       double[] filteredValues = filter.getFilteredValues(event.values);
       float[] filteredFloatValues = new float[filteredValues.length];
 
@@ -331,41 +277,29 @@ public class AccelerometerService extends SensorService implements
       }
 
       // TODO: Send the accelerometer reading to the server
-      Log.d(
-        TAG,
-        "X: " + filteredFloatValues[0] +
-          ", Y: " + filteredFloatValues[1] +
-          ", Z: " + filteredFloatValues[2]
-      );
+//      Log.d(
+//        TAG,
+//        "X: " + filteredFloatValues[0] +
+//          ", Y: " + filteredFloatValues[1] +
+//          ", Z: " + filteredFloatValues[2]
+//      );
 
-      mClient.sendSensorReading(new AccelerometerReading(
-        mUserID,
-        "MOBILE",
-        "",
-        timestamp_in_milliseconds,
-        filteredFloatValues
-      ));
+//      mClient.sendSensorReading(new AccelerometerReading(
+//        mUserID,
+//        "MOBILE",
+//        "",
+//        timestamp_in_milliseconds,
+//        filteredFloatValues
+//      ));
 
       // TODO: broadcast the accelerometer reading to the UI
-      broadcastAccelerometerReading(timestamp_in_milliseconds, filteredFloatValues);
-      broadcastStepDetected(timestamp_in_milliseconds, filteredFloatValues);
+      broadcastAccelerometerReading(timestamp_in_milliseconds, event.values);
+      broadcastStepDetected(timestamp_in_milliseconds, event.values);
     }
     else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
-        System.out.println("DETECTOR SENSOR GOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-        // we received a step event detected by the built-in Android step
-        // detector (assignment 1)
-
-        filter = new Filter(15.0);
-        double[] filteredValues = filter.getFilteredValues(event.values);
-        float[] filteredFloatValues = new float[filteredValues.length];
-
-        for (int i = 0; i < filteredValues.length; i++) {
-            filteredFloatValues[i] = (float)filteredValues[i];
-        }
-        //SensorEvent e = new SensorEvent(event.timestamp, filteredFloatValues);
-        processData(new EventTuple(event.timestamp, filteredFloatValues));
-//      broadcastAndroidStepCount(mAndroidStepCount++);
-
+      // we received a step event detected by the built-in Android step
+      // detector (assignment 1)
+      broadcastAndroidStepCount(mAndroidStepCount++);
     }
     else {
       // cannot identify sensor type
