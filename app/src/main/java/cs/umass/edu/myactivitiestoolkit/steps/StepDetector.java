@@ -105,7 +105,5 @@ public class StepDetector implements SensorEventListener {
       stepListener.onStepDetected(timestamp, values);
       stepListener.onStepCountUpdated(stepCount);
     }
-
-    Log.d("", String.valueOf(stepCount));
   }
 }
