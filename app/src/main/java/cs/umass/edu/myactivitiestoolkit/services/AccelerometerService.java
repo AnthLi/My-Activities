@@ -197,6 +197,13 @@ public class AccelerometerService extends SensorService implements
       mStepSensor,
       mSensorManager.SENSOR_DELAY_NORMAL
     );
+
+    // Register the step detector to the accelerometer
+    mSensorManager.registerListener(
+      mStepDetector,
+      mAccelerometerSensor,
+      mSensorManager.SENSOR_DELAY_NORMAL
+    );
   }
 
   /**
@@ -210,6 +217,7 @@ public class AccelerometerService extends SensorService implements
     if (mSensorManager != null) {
       mSensorManager.unregisterListener(this, mAccelerometerSensor);
       mSensorManager.unregisterListener(this, mStepSensor);
+      mSensorManager.unregisterListener(mStepDetector, mAccelerometerSensor);
     }
   }
 

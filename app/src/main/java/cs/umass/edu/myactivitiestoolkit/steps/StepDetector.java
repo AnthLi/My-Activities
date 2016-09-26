@@ -139,7 +139,7 @@ public class StepDetector implements SensorEventListener {
       // TODO: Detect steps! Call onStepDetected(...) when a step is detected.
 
       // Filter the event values
-      filter = new Filter(10.0);
+      filter = new Filter(1);
       double[] filteredValues = filter.getFilteredValues(event.values);
       float[] filteredFloatValues = new float[filteredValues.length];
 
