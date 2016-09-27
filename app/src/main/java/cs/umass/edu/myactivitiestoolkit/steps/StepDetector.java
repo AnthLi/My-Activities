@@ -5,17 +5,18 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.util.Log;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import cs.umass.edu.myactivitiestoolkit.processing.Filter;
 
-class EventTuple {
-  public long timeStamp;
-  public float[] values;
+class Calculation {
+  public float min;
+  public float max;
 
-  public EventTuple(long t, float[] v){
-    timeStamp = t;
-    values = v;
+  public Calculation(float min, float max) {
+    this.min = min;
+    this.max = max;
   }
 }
 
@@ -73,55 +74,79 @@ public class StepDetector implements SensorEventListener {
     mStepListeners.clear();
   }
 
-  // Size of data to collect for step detection
-  private final int window = 20;
-  private ArrayList<EventTuple> sampleData = new ArrayList<EventTuple>();
+  // Window of sample values used for step detection
+  private ArrayList<Float> samples = new ArrayList<>();
 
-  private boolean stepDetected(EventTuple event) {
-    if (sampleData.size() < window) {
-      sampleData.add(event);
+  // Return the axis with the maximum acceleration. 0 is the X axis, 1 is the
+  // Y axis, and 2 is the Z axis
+  private static int getMaxAxis(float[] values) {
+    float max = 0f;
+    int axis = 0;
+
+    for (int i = 0; i < values.length; i++) {
+      float currMax = Math.abs(values[i]);
+
+      if (currMax > max) {
+        max = currMax;
+        axis = i;
+      }
+    }
+
+    return axis;
+  }
+
+  // Calculate the min and max values.
+  private static Calculation calculate(float[] values) {
+    float min = 0f;
+    float max = 0f;
+
+    for (float v : values) {
+      if (v > max) {
+        max = v;
+      }
+
+      if (v < min) {
+        min = v;
+      }
+    }
+
+    return new Calculation(min, max);
+  }
+
+  // Step Detection Algorithm using Dynamic Detection Threshold
+  private boolean stepDetection(float[] values) {
+    final int windowSize = 50;
+    boolean stepDetected = false;
+    // Axis with max acceleration
+    int axis = getMaxAxis(values);
+
+    // Add enough values to fill the window size
+    if (samples.size() < windowSize) {
+      samples.add(values[axis]);
     }
     else {
-      //if the array has hit out desired size of the sample window...
-      //detect movement by change of z value
-      float base = 9.8f;
-      float offset = 4f;
-      boolean dipBelow = false;
-      boolean dipAbove = false;
-      //if first data point is greater base line
-      if (sampleData.get(0).values[2] >= base) {
-        dipAbove = true;
-      }
-      //if the first data point is beneath the base
-      else {
-        dipBelow = true;
-      }
+      // Retrieve the min and max values
+      Calculation calculation = calculate(values);
+      // Determine the dynamic detection threshold with the min and max values
+      float threshold = Math.abs((calculation.max + calculation.min) / 2);
 
-      int i = 0;
-      while (i < sampleData.size()) {
-        if (dipAbove) {
-          //should have already broadcast, so we are waiting for the trend to go back down
-          if (sampleData.get(i).values[2] < base+offset) {
-            Log.d(TAG, String.valueOf(sampleData.get(i).values[2]));
-            dipBelow = true;
-            dipAbove = false;
+      for (int i = 1; i < samples.size(); i++) {
+        float prevSample = Math.abs(samples.get(i - 1));
+        float currSample = Math.abs(samples.get(i));
+
+        if (!stepDetected) {
+          if (currSample < threshold && currSample < prevSample) {
+            Log.d(TAG, "Step detected!");
+            stepDetected = true;
           }
         }
-        else {
-          if (sampleData.get(i).values[2] > base + offset) {
-            Log.d(TAG, String.valueOf(sampleData.get(i).values[2]));
-            dipAbove = true;
-            dipBelow = false;
-          }
-        }
-
-        i++;
       }
 
-      sampleData = new ArrayList<EventTuple>();
+      // Reset the sample data to retrieve the next set of values
+      samples.clear();
     }
 
-    return false;
+    return stepDetected;
   }
 
   /**
@@ -147,16 +172,9 @@ public class StepDetector implements SensorEventListener {
         filteredFloatValues[i] = (float)filteredValues[i];
       }
 
-//      if (stepDetected(new EventTuple(event.timestamp, filteredFloatValues))) {
-//        onStepDetected(event.timestamp, filteredFloatValues);
-//      }
-
-      Log.d(
-        TAG,
-        "X: " + event.values[0] +
-          ", Y: " + event.values[1] +
-          ", Z: " + event.values[2]
-      );
+      if (stepDetection(filteredFloatValues)) {
+        onStepDetected(event.timestamp, filteredFloatValues);
+      }
     }
   }
 
