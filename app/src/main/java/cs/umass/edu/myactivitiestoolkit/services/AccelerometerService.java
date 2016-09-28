@@ -153,7 +153,6 @@ public class AccelerometerService extends SensorService implements
   public void onConnected() {
     super.onConnected();
     mClient.registerMessageReceiver(new MessageReceiver(Constants.MHLClientFilter.STEP_DETECTED) {
-
       @Override
       protected void onMessageReceived(JSONObject json) {
         Log.d(TAG, "Received step update from server.");
@@ -304,24 +303,16 @@ public class AccelerometerService extends SensorService implements
       }
 
       // TODO: Send the accelerometer reading to the server
-//      Log.d(
-//        TAG,
-//        "X: " + filteredFloatValues[0] +
-//          ", Y: " + filteredFloatValues[1] +
-//          ", Z: " + filteredFloatValues[2]
-//      );
-
-//      mClient.sendSensorReading(new AccelerometerReading(
-//        mUserID,
-//        "MOBILE",
-//        "",
-//        timestamp_in_milliseconds,
-//        filteredFloatValues
-//      ));
+      mClient.sendSensorReading(new AccelerometerReading(
+        mUserID,
+        "MOBILE",
+        "",
+        timestamp_in_milliseconds,
+        filteredFloatValues
+      ));
 
       // TODO: broadcast the accelerometer reading to the UI
       broadcastAccelerometerReading(timestamp_in_milliseconds, filteredFloatValues);
-      broadcastStepDetected(timestamp_in_milliseconds, filteredFloatValues);
     }
     else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR) {
       // we received a step event detected by the built-in Android step

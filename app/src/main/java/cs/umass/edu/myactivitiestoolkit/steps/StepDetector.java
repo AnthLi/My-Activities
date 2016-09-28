@@ -125,6 +125,7 @@ public class StepDetector implements SensorEventListener {
       samples.add(values[axis]);
     }
     else {
+      final float offset = 2f;
       // Retrieve the min and max values
       Calculation calculation = calculate(values);
       // Determine the dynamic detection threshold with the min and max values
@@ -135,8 +136,7 @@ public class StepDetector implements SensorEventListener {
         float currSample = Math.abs(samples.get(i));
 
         if (!stepDetected) {
-          if (currSample < threshold && currSample < prevSample) {
-            Log.d(TAG, "Step detected!");
+          if (currSample < threshold + offset && currSample < prevSample) {
             stepDetected = true;
           }
         }
@@ -150,9 +150,9 @@ public class StepDetector implements SensorEventListener {
   }
 
   /**
-   * Here is where you will receive accelerometer readings, buffer them if necessary
-   * and run your step detection algorithm. When a step is detected, call
-   * {@link #onStepDetected(long, float[])} to notify all listeners.
+   * Here is where you will receive accelerometer readings, buffer them if
+   * necessary and run your step detection algorithm. When a step is detected,
+   * call {@link #onStepDetected(long, float[])} to notify all listeners.
    * <p>
    * Recall that human steps tend to take anywhere between 0.5 and 2 seconds.
    *
