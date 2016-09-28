@@ -11,10 +11,10 @@ import java.util.ArrayList;
 import cs.umass.edu.myactivitiestoolkit.processing.Filter;
 
 class Calculation {
-  public float min;
-  public float max;
+  float min;
+  float max;
 
-  public Calculation(float min, float max) {
+  Calculation(float min, float max) {
     this.min = min;
     this.max = max;
   }
@@ -115,7 +115,7 @@ public class StepDetector implements SensorEventListener {
 
   // Step Detection Algorithm using Dynamic Detection Threshold
   private boolean stepDetection(float[] values) {
-    final int windowSize = 50;
+    final int windowSize = 10;
     boolean stepDetected = false;
     // Axis with max acceleration
     int axis = getMaxAxis(values);
@@ -125,7 +125,6 @@ public class StepDetector implements SensorEventListener {
       samples.add(values[axis]);
     }
     else {
-      final float offset = 2f;
       // Retrieve the min and max values
       Calculation calculation = calculate(values);
       // Determine the dynamic detection threshold with the min and max values
@@ -136,14 +135,14 @@ public class StepDetector implements SensorEventListener {
         float currSample = Math.abs(samples.get(i));
 
         if (!stepDetected) {
-          if (currSample < threshold + offset && currSample < prevSample) {
+          if (currSample < threshold && currSample < prevSample) {
             stepDetected = true;
+
+            // Reset the sample data to retrieve the next set of values
+            samples.clear();
           }
         }
       }
-
-      // Reset the sample data to retrieve the next set of values
-      samples.clear();
     }
 
     return stepDetected;
