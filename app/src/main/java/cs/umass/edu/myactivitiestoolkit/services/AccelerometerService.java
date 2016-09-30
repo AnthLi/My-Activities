@@ -120,6 +120,8 @@ public class AccelerometerService extends SensorService implements
 
   private int mLocalStepCount = 0;
 
+  private int mServerStepCount = 0;
+
   private Filter filter;
 
   private OnStepListener stepListener = new OnStepListener() {
@@ -165,6 +167,8 @@ public class AccelerometerService extends SensorService implements
         catch (JSONException e) {
           e.printStackTrace();
         }
+
+        broadcastServerStepDetected(mServerStepCount++);
       }
     });
 
@@ -374,7 +378,13 @@ public class AccelerometerService extends SensorService implements
 
   // TODO: (Assignment 1)
   // Broadcast the step count as computed by your server-side algorithm.
-
+  public void broadcastServerStepDetected(int stepCount) {
+    Intent intent = new Intent();
+    intent.putExtra(Constants.KEY.STEP_COUNT, stepCount);
+    intent.setAction(Constants.ACTION.BROADCAST_SERVER_STEP_COUNT);
+    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+    manager.sendBroadcast(intent);
+  }
 
   /**
    * Broadcasts a step event to other application components, e.g. the main UI.
