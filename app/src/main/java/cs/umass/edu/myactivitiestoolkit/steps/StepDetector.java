@@ -115,8 +115,8 @@ public class StepDetector implements SensorEventListener {
 
   // Step Detection Algorithm using Dynamic Detection Threshold
   private boolean stepDetection(float[] values) {
-    final int windowSize = 10;
-    boolean stepDetected = false;
+    final int windowSize = 20;
+    final float offset = 1f;
     // Axis with max acceleration
     int axis = getMaxAxis(values);
 
@@ -134,18 +134,16 @@ public class StepDetector implements SensorEventListener {
         float prevSample = Math.abs(samples.get(i - 1));
         float currSample = Math.abs(samples.get(i));
 
-        if (!stepDetected) {
-          if (currSample < threshold && currSample < prevSample) {
-            stepDetected = true;
+        if (currSample < threshold - offset && currSample < prevSample) {
+          // Reset the sample data to retrieve the next set of values
+          samples.clear();
 
-            // Reset the sample data to retrieve the next set of values
-            samples.clear();
-          }
+          return true;
         }
       }
     }
 
-    return stepDetected;
+    return false;
   }
 
   /**
