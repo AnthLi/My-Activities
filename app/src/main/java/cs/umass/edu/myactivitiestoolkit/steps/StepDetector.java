@@ -96,7 +96,7 @@ public class StepDetector implements SensorEventListener {
   }
 
   // Calculate the min and max values.
-  private static Calculation calculate(float[] values) {
+  private static Calculation calculate(ArrayList<Float> values) {
     float min = 0f;
     float max = 0f;
 
@@ -126,7 +126,7 @@ public class StepDetector implements SensorEventListener {
     }
     else {
       // Retrieve the min and max values
-      Calculation calculation = calculate(values);
+      Calculation calculation = calculate(samples);
       // Determine the dynamic detection threshold with the min and max values
       float threshold = Math.abs((calculation.max + calculation.min) / 2);
 
