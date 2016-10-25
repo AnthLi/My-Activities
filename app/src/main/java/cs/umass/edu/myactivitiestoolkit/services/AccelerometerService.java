@@ -294,7 +294,14 @@ public class AccelerometerService extends SensorService implements SensorEventLi
       }
 
       // TODO: Send the accelerometer reading to the server
-      mClient.sendSensorReading(new AccelerometerReading(mUserID, "MOBILE", "", timestamp_in_milliseconds, 3, filteredFloatValues));
+      mClient.sendSensorReading(new AccelerometerReading(
+        mUserID,
+        "MOBILE",
+        "",
+        timestamp_in_milliseconds,
+        3,
+        filteredFloatValues
+      ));
 
       // TODO: broadcast the accelerometer reading to the UI
       broadcastAccelerometerReading(timestamp_in_milliseconds, filteredFloatValues);

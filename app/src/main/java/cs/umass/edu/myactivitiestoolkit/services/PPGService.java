@@ -162,12 +162,24 @@ public class PPGService extends SensorService implements PPGListener {
 //    }
 
     // TODO: send the data to the UI fragment for visualization, using broadcastPPGReading(...)
-    // TODO: Send the filtered mean red value to the server
-    // TODO: Buffer data if necessary for your algorithm
-    // TODO: Call your heart beat and bpm detection algorithm
-    // TODO: Send your heart rate estimate to the server
-
     broadcastPPGReading(event.timestamp, event.value);
+
+    // TODO: Send the filtered mean red value to the server
+    mClient.sendSensorReading(new PPGSensorReading(
+      mUserID,
+      "MOBILE",
+      "",
+      event.timestamp,
+      event.value
+    ));
+
+    // TODO: Buffer data if necessary for your algorithm
+
+
+    // TODO: Call your heart beat and bpm detection algorithm
+
+
+    // TODO: Send your heart rate estimate to the server
   }
 
   /**
