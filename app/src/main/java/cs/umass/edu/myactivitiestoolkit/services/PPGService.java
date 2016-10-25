@@ -161,8 +161,6 @@ public class PPGService extends SensorService implements PPGListener {
 //      filteredFloatValues[i] = (float) filteredValues[i];
 //    }
 
-
-
     // TODO: send the data to the UI fragment for visualization, using broadcastPPGReading(...)
     // TODO: Send the filtered mean red value to the server
     // TODO: Buffer data if necessary for your algorithm
