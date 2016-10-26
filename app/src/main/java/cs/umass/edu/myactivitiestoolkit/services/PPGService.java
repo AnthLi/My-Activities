@@ -62,7 +62,7 @@ public class PPGService extends SensorService implements PPGListener {
     Log.d(TAG, "START");
     mPPGSensor = new HeartRateCameraView(getApplicationContext(), null);
 
-    WindowManager winMan = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+    WindowManager winMan = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
     WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, PixelFormat.TRANSLUCENT);
 
     //surface view dimensions and position specified where service intent is called
@@ -96,7 +96,7 @@ public class PPGService extends SensorService implements PPGListener {
       mPPGSensor.stop();
     }
     if (mPPGSensor != null) {
-      ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).removeView(mPPGSensor);
+      ((WindowManager)getSystemService(Context.WINDOW_SERVICE)).removeView(mPPGSensor);
     }
     broadcastMessage(Constants.MESSAGE.PPG_SERVICE_STOPPED);
   }
@@ -104,13 +104,13 @@ public class PPGService extends SensorService implements PPGListener {
   @Override
   protected void registerSensors() {
     // TODO: Register a PPG listener with the PPG sensor (mPPGSensor)
-     mPPGSensor.registerListener(this);
+    mPPGSensor.registerListener(this);
   }
 
   @Override
   protected void unregisterSensors() {
     // TODO: Unregister the PPG listener
-     mPPGSensor.unregisterListener(this);
+    mPPGSensor.unregisterListener(this);
   }
 
   @Override
@@ -152,17 +152,12 @@ public class PPGService extends SensorService implements PPGListener {
   @Override
   public void onSensorChanged(PPGEvent event) {
     // TODO: Smooth the signal using a Butterworth / exponential smoothing filter
-//    filter = new Filter(10);
-//
-//    double[] filteredValues = filter.getFilteredValues(event.value);
-//    float[] filteredFloatValues = new float[filteredValues.length];
-//
-//    for (int i = 0; i < filteredValues.length; i++) {
-//      filteredFloatValues[i] = (float) filteredValues[i];
-//    }
+    filter = new Filter(10);
+    double[] filteredValues = filter.getFilteredValues((float)event.value);
 
     // TODO: send the data to the UI fragment for visualization, using broadcastPPGReading(...)
     broadcastPPGReading(event.timestamp, event.value);
+    // broadcastPPGReading(event.timestamp, filteredValues[0]);
 
     // TODO: Send the filtered mean red value to the server
     mClient.sendSensorReading(new PPGSensorReading(
@@ -170,13 +165,13 @@ public class PPGService extends SensorService implements PPGListener {
       "MOBILE",
       "",
       event.timestamp,
-      event.value
+      filteredValues[0]
     ));
 
     // TODO: Buffer data if necessary for your algorithm
 
 
-    // TODO: Call your heart beat and bpm detection algorithm
+    // TODO: Call your heart beat and bpm d/Users/anthonyli/Library/Android/sdketection algorithm
 
 
     // TODO: Send your heart rate estimate to the server

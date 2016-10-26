@@ -197,19 +197,31 @@ public class AccelerometerService extends SensorService implements SensorEventLi
   protected void registerSensors() {
     // TODO : (Assignment 0)
     // Register the accelerometer sensor from the sensor manager.
-    mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+    mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
 
     mAccelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-    mSensorManager.registerListener(this, mAccelerometerSensor, mSensorManager.SENSOR_DELAY_NORMAL);
+    mSensorManager.registerListener(
+      this,
+      mAccelerometerSensor,
+      mSensorManager.SENSOR_DELAY_NORMAL
+    );
 
     // TODO : (Assignment 1)
     // Register your step detector. Register an OnStepListener to receive step
     // events
     mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-    mSensorManager.registerListener(this, mStepSensor, mSensorManager.SENSOR_DELAY_NORMAL);
+    mSensorManager.registerListener(
+      this,
+      mStepSensor,
+      mSensorManager.SENSOR_DELAY_NORMAL
+    );
 
     // Register the step detector to the accelerometer
-    mSensorManager.registerListener(mStepDetector, mAccelerometerSensor, mSensorManager.SENSOR_DELAY_NORMAL);
+    mSensorManager.registerListener(
+      mStepDetector,
+      mAccelerometerSensor,
+      mSensorManager.SENSOR_DELAY_NORMAL
+    );
 
     // Register the step listener
     mStepDetector.registerOnStepListener(stepListener);
@@ -282,7 +294,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
   public void onSensorChanged(SensorEvent event) {
     if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
       // convert the timestamp to milliseconds (note this is not in Unix time)
-      long timestamp_in_milliseconds = (long) ((double) event.timestamp / Constants.TIMESTAMPS.NANOSECONDS_PER_MILLISECOND);
+      long timestamp_in_milliseconds = (long)((double)event.timestamp / Constants.TIMESTAMPS.NANOSECONDS_PER_MILLISECOND);
 
       // Filter the event values
       filter = new Filter(1);
@@ -290,7 +302,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
       float[] filteredFloatValues = new float[filteredValues.length];
 
       for (int i = 0; i < filteredValues.length; i++) {
-        filteredFloatValues[i] = (float) filteredValues[i];
+        filteredFloatValues[i] = (float)filteredValues[i];
       }
 
       // TODO: Send the accelerometer reading to the server
