@@ -146,11 +146,13 @@ public class PPGService extends SensorService implements PPGListener {
     long currTime = System.currentTimeMillis();
     if (startTime == 0L) {
       startTime = currTime;
-    } else if (currTime - startTime <= 60000) {
+    }
+
+    if (currTime - startTime <= 60000) {
       rates.add(ppgValue);
     } else {
       startTime = currTime;
-
+      
       
     }
 
