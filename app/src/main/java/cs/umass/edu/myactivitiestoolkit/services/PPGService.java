@@ -61,6 +61,7 @@ public class PPGService extends SensorService implements PPGListener {
   protected void start() {
     Log.d(TAG, "START");
     mPPGSensor = new HeartRateCameraView(getApplicationContext(), null);
+    filter = new Filter(5);
 
     WindowManager winMan = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
     WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, PixelFormat.TRANSLUCENT);
@@ -152,12 +153,10 @@ public class PPGService extends SensorService implements PPGListener {
   @Override
   public void onSensorChanged(PPGEvent event) {
     // TODO: Smooth the signal using a Butterworth / exponential smoothing filter
-    filter = new Filter(10);
     double[] filteredValues = filter.getFilteredValues((float)event.value);
 
     // TODO: send the data to the UI fragment for visualization, using broadcastPPGReading(...)
-    broadcastPPGReading(event.timestamp, event.value);
-    // broadcastPPGReading(event.timestamp, filteredValues[0]);
+    broadcastPPGReading(event.timestamp, filteredValues[0]);
 
     // TODO: Send the filtered mean red value to the server
     mClient.sendSensorReading(new PPGSensorReading(
@@ -171,10 +170,17 @@ public class PPGService extends SensorService implements PPGListener {
     // TODO: Buffer data if necessary for your algorithm
 
 
-    // TODO: Call your heart beat and bpm d/Users/anthonyli/Library/Android/sdketection algorithm
+    // TODO: Call your heart beat and bpm detection algorithm
 
 
     // TODO: Send your heart rate estimate to the server
+//    mClient.sendSensorReading(new HRSensorReading(
+//      mUserID,
+//      "MOBILE",
+//      "",
+//      event.timestamp,
+//      1.0 // dummy value
+//    ));
   }
 
   /**
