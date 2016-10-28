@@ -249,6 +249,19 @@ public class PPGService extends SensorService implements PPGListener {
           event.timestamp,
           timestamps.size()
         ));
+      } else {
+        // Estimate the BPM while peaks are still being collected
+        long diff = event.timestamp - timestamps.peek();
+        int bpm = (int)(60000 / diff) * timestamps.size();
+        broadcastBPM(bpm);
+
+        mClient.sendSensorReading(new HRSensorReading(
+          mUserID,
+          "MOBILE",
+          "",
+          event.timestamp,
+          bpm
+        ));
       }
     }
   }
