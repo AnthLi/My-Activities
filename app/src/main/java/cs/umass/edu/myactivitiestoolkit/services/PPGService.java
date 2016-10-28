@@ -11,6 +11,7 @@ import android.view.Gravity;
 import android.view.WindowManager;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import cs.umass.edu.myactivitiestoolkit.R;
@@ -62,14 +63,24 @@ public class PPGService extends SensorService implements PPGListener {
 
   private long startTime;
 
-  private Queue<Double> rates;
+  private long latestPeakTime;
+
+  private boolean ascending;
+
+  private List<Double> ppgValues;
+
+  private Queue<Long> timestamps;
 
   @Override
   protected void start() {
     Log.d(TAG, "START");
     mPPGSensor = new HeartRateCameraView(getApplicationContext(), null);
     filter = new Filter(5);
-    rates = new LinkedList<>();
+    startTime = 0L;
+    latestPeakTime = 0L;
+    ascending = false;
+    ppgValues = new LinkedList<>();
+    timestamps = new LinkedList<>();
 
     WindowManager winMan = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
     WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, PixelFormat.TRANSLUCENT);
@@ -137,26 +148,49 @@ public class PPGService extends SensorService implements PPGListener {
     return R.drawable.ic_whatshot_white_48dp;
   }
 
-  // Heart rate in BPM (beats per minute)
-  // Start off by checking if starTime has been assigned. If not, assign it to
-  // the current time in milliseconds, then return -1 to halt since BPM in general can
-  // never be below 0. Next, while the current time minus startTime is less than
-  // one minute, append the given PPG value to the queue.
-  private int bpmDetection(double ppgValue) {
+  // Heart beat and BPM detection
+  private void bpmDetection(double value) {
     long currTime = System.currentTimeMillis();
     if (startTime == 0L) {
       startTime = currTime;
     }
 
-    if (currTime - startTime <= 60000) {
-      rates.add(ppgValue);
-    } else {
-      startTime = currTime;
-      
-      
+    // Remove the oldest timestamp if it was enqueued more than a minute ago
+    if (timestamps.size() > 0) {
+      if (currTime - timestamps.peek() >= 60000) {
+        timestamps.remove();
+      }
     }
 
-    return 0;
+    // Check to see if ppgValues are ascending
+    if (!ascending) {
+      if (ppgValues.size() != 0) {
+        // Reset ppgValues to only take in ascending PPG values
+        if (value > ppgValues.get(ppgValues.size() - 1)) {
+          ascending = true;
+          ppgValues.clear();
+        }
+      }
+
+      ppgValues.add(value);
+    } else {
+      // Check to see if ppgValues started decrementing yet
+      if (value < ppgValues.get(ppgValues.size() - 1)) {
+        // Ignore rates that would exceed 200 BPM
+        if (currTime - latestPeakTime >= 333) {
+          // Set and add the latest peak time, then broadcast it
+          latestPeakTime = System.currentTimeMillis();
+          timestamps.add(latestPeakTime);
+          broadcastPeak(latestPeakTime, value);
+
+          // Reset the buffer again for ascending PPG values
+          ascending = false;
+          ppgValues.clear();
+        }
+      }
+
+      ppgValues.add(value);
+    }
   }
 
   /**
@@ -185,14 +219,9 @@ public class PPGService extends SensorService implements PPGListener {
     // TODO: Smooth the signal using a Butterworth / exponential smoothing filter
     double[] filteredValues = filter.getFilteredValues((float)event.value);
 
-    bpmDetection(filteredValues[0]);
-
-    Log.d(TAG, "" + rates.size());
-
     // TODO: send the data to the UI fragment for visualization, using broadcastPPGReading(...)
     // broadcastPPGReading(event.timestamp, event.value);
     broadcastPPGReading(event.timestamp, filteredValues[0]);
-    // broadcastPeak(event.timestamp, filteredValues[0]);
 
     // TODO: Send the filtered mean red value to the server
     mClient.sendSensorReading(new PPGSensorReading(
@@ -204,19 +233,24 @@ public class PPGService extends SensorService implements PPGListener {
     ));
 
     // TODO: Buffer data if necessary for your algorithm
-
-
     // TODO: Call your heart beat and bpm detection algorithm
-
-
     // TODO: Send your heart rate estimate to the server
-//    mClient.sendSensorReading(new HRSensorReading(
-//      mUserID,
-//      "MOBILE",
-//      "",
-//      event.timestamp,
-//      1.0 // dummy value
-//    ));
+    bpmDetection(filteredValues[0]);
+
+    if (timestamps.size() != 0) {
+      // Wait approximately a minute before broadcasting BPM
+      if (event.timestamp - timestamps.peek() >= 55000) {
+        broadcastBPM(timestamps.size());
+
+        mClient.sendSensorReading(new HRSensorReading(
+          mUserID,
+          "MOBILE",
+          "",
+          event.timestamp,
+          timestamps.size()
+        ));
+      }
+    }
   }
 
   /**
