@@ -123,7 +123,12 @@ class FeatureExtractor():
         You should compute the distribution of the frequencies in fixed bins.
         This will give you a feature vector of length len(bins).
         """
-        return [1] # returns dummy value; replace this with the features you extract
+
+        freqs, bandwidths = self._compute_formants(window)
+        # Ignore frequencies greater than 5500Hz
+        hist, bins = np.histogram(freq, bins = 10, range = (0, 5500))
+
+        return hist
 
     def _compute_pitch_contour(self, window):
         """
@@ -174,7 +179,12 @@ class FeatureExtractor():
 
         You may also want to return the average pitch and standard deviation.
         """
-        return [1] # returns dummy value; replace this with the features you extract
+
+        # Compute the pitch contour and confidence curve
+        pitch_contour, confidence_curve = self._compute_pitch_contour(window)
+        hist, bins = np.histogram(pitch_contour, bins = 10, range = (0, 128))
+
+        return hist
 
     def _compute_mfcc(self, window):
         """
@@ -213,7 +223,29 @@ class FeatureExtractor():
         See section "Deltas and Delta-Deltas" at http://practicalcryptography.com/miscellaneous/machine-learning/guide-mel-frequency-cepstral-coefficients-mfccs/.
 
         """
-        return [1] # returns dummy value; replace this with the features you extract
+
+        # Compute the MFCCs
+        mfccs = self._compute_mfcc(window)
+        mfccs_len = len(mfccs)
+        # Range of the summation
+        range = np.arange(1, n + 1)
+        # Compute the denominator
+        denominator = 2 * np.sum(np.square(range))
+        vector = []
+
+        for i in range:
+            # Calculate the numerator
+            numerator = 0
+
+            for j range(mfccs_len):
+                # Make sure the index is within range
+                if (j - n > 0) and (j + n < mfccs_len):
+                    numerator += n * (mfccs[i + n] - mfccs[i - n])
+
+            # Append the delta coefficient
+            vector.append(numerator / denominator)
+
+        return vector
 
     def _recognize_speech(window):
         """
