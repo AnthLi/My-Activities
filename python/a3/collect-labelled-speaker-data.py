@@ -22,14 +22,16 @@ user_id = "6f.c4.bc.16.45.d8.16.a8.bd.f0"
 
 # TODO: Change the filename of the output file.
 # You should keep it in the format "speaker-data-<speaker>-#.csv"
-# filename="speaker-data-nospeaker-1.csv"
-filename="speaker-data-anthony-2.csv"
-# filename="speaker-data-ben-3.csv"
+# filename = "speaker-data-nospeaker-2.csv"
+filename = "speaker-data-anthony-2.csv"
+# filename = "speaker-data-ben-1.csv"
+# filename = "speaker-data-drumpf-2.csv"
 
 # TODO: Change the label to match the speaker; it must be numeric
 # label = 0
 label = 1
 # label = 2
+# label = 3
 
 data_dir = "data"
 

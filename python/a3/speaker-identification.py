@@ -55,7 +55,7 @@ def onSpeakerDetected(speaker):
     sys.stdout.flush()
     send_socket.send(json.dumps({'user_id' : user_id, 'sensor_type' : 'SENSOR_SERVER_MESSAGE', 'message' : 'SPEAKER_DETECTED', 'data': {'speaker' : speaker}}) + "\n")
 
-class_name = ['No Speaker', 'Anthony', 'Ben', '???']
+class_name = ['No Speaker', 'Anthony', 'Ben', 'Donald Drumpf']
 
 def predict(window):
     """
