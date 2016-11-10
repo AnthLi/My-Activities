@@ -6,10 +6,10 @@ Created on Wed Sep 21 16:02:58 2016
 
 Assignment 3 : Speaker Identification
 
-This is the starter script for training a model for identifying 
-speaker from audio data. The script loads all labelled speaker 
-audio data files in the specified directory. It extracts features 
-from the raw data and trains and evaluates a classifier to identify 
+This is the starter script for training a model for identifying
+speaker from audio data. The script loads all labelled speaker
+audio data files in the specified directory. It extracts features
+from the raw data and trains and evaluates a classifier to identify
 the speaker.
 
 """
@@ -43,7 +43,7 @@ output_dir = 'training_output' # directory where the classifier(s) are stored
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 
-# the filenames should be in the form 'speaker-data-subject-1.csv', e.g. 'speaker-data-Erik-1.csv'. If they 
+# the filenames should be in the form 'speaker-data-subject-1.csv', e.g. 'speaker-data-Erik-1.csv'. If they
 # are not, that's OK but the progress output will look nonsensical
 
 class_names = [] # the set of classes, i.e. speakers
@@ -75,7 +75,7 @@ print("Found data for {} speakers : {}".format(len(class_names), ", ".join(class
 
 # You may need to change n_features depending on how you compute your features
 # we have it set to 3 to match the dummy values we return in the starter code.
-n_features = 3
+n_features = 46
 
 print("Extracting features and labels for {} audio windows...".format(data.shape[0]))
 sys.stdout.flush()
@@ -84,20 +84,20 @@ X = np.zeros((0,n_features))
 y = np.zeros(0,)
 
 # change debug to True to show print statements we've included:
-feature_extractor = FeatureExtractor(debug=False) 
+feature_extractor = FeatureExtractor(debug=False)
 
 for i,window_with_timestamp_and_label in enumerate(data):
     window = window_with_timestamp_and_label[1:-1] # get window without timestamp/label
     label = data[i,-1] # get label
     x = feature_extractor.extract_features(window)  # extract features
-    
+
     # if # of features don't match, we'll tell you!
     if (len(x) != X.shape[1]):
         print("Received feature vector of length {}. Expected feature vector of length {}.".format(len(x), X.shape[1]))
-        
+
     X = np.append(X, np.reshape(x, (1,-1)), axis=0)
     y = np.append(y, label)
-    
+
 print("Finished feature extraction over {} windows".format(len(X)))
 print("Unique labels found: {}".format(set(y)))
 sys.stdout.flush()
@@ -113,7 +113,7 @@ n = len(y)
 n_classes = len(class_names)
 
 # TODO: Train your classifier!
-cv = cross_validation.KFold(n, n_folds=10, shuffle-True, random_state=None)
+cv = cross_validation.KFold(n, n_folds=10, shuffle=True, random_state=None)
 tree = DecisionTreeClassifier(criterion="entropy", max_depth=10, max_features=10)
 
 Accuracy = []
@@ -138,23 +138,19 @@ for i, (train_indexes, test_indexes) in enumerate(cv):
         if totalSum!=0:
             Accuracy += c_matrix[x,x]/totalSum
         precisionSum = sum(c_matrix[:,x])*1.00000
-        if precisionSum!=0:    
+        if precisionSum!=0:
             Precision[x] += c_matrix[x,x]/precisionSum
         recalSum = sum(c_matrix[x,:])*1.00000
         if recalSum!=0:
             Recall[x] += c_matrix[x,x]/recalSum
 
-
-
 print "Average accuracy:", Accuracy / (len(Accuracy)*1.0000)
 print "Average precision:", [p / 10 for p in Precision]
 print "Average recall:", [r / 10 for r in Recall]
 
-
-
 # TODO: set your best classifier below, then uncomment the following line to train it on ALL the data:
 best_classifier = tree
-# best_classifier.fit(X,y) 
+# best_classifier.fit(X,y)
 
 classifier_filename='classifier.pickle'
 print("Saving best classifier to {}...".format(os.path.join(output_dir, classifier_filename)))

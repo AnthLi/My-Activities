@@ -126,7 +126,7 @@ class FeatureExtractor():
 
         freqs, bandwidths = self._compute_formants(window)
         # Ignore frequencies greater than 5500Hz
-        hist, bins = np.histogram(freq, bins = 10, range = (0, 5500))
+        hist, bins = np.histogram(freqs, range = (0, 5500))
 
         return hist
 
@@ -182,7 +182,7 @@ class FeatureExtractor():
 
         # Compute the pitch contour and confidence curve
         pitch_contour, confidence_curve = self._compute_pitch_contour(window)
-        hist, bins = np.histogram(pitch_contour, bins = 10, range = (0, 128))
+        hist, bins = np.histogram(pitch_contour, range = (0, 128))
 
         return hist
 
@@ -228,16 +228,16 @@ class FeatureExtractor():
         mfccs = self._compute_mfcc(window)
         mfccs_len = len(mfccs)
         # Range of the summation
-        range = np.arange(1, n + 1)
+        sumRange =  np.arange(1, n + 1)
         # Compute the denominator
-        denominator = 2 * np.sum(np.square(range))
+        denominator = 2 * np.sum(np.square(sumRange))
         vector = []
 
-        for i in range:
+        for i in sumRange:
             # Calculate the numerator
             numerator = 0
 
-            for j range(mfccs_len):
+            for j in range(mfccs_len):
                 # Make sure the index is within range
                 if (j - n > 0) and (j + n < mfccs_len):
                     numerator += n * (mfccs[i + n] - mfccs[i - n])
