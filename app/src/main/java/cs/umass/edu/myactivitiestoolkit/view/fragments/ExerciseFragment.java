@@ -214,10 +214,12 @@ public class ExerciseFragment extends Fragment {
           int message = intent.getIntExtra(Constants.KEY.MESSAGE, -1);
           if (message == Constants.MESSAGE.ACCELEROMETER_SERVICE_STOPPED) {
             switchAccelerometer.setChecked(false);
-          } else if (message == Constants.MESSAGE.BAND_SERVICE_STOPPED) {
+          }
+          else if (message == Constants.MESSAGE.BAND_SERVICE_STOPPED) {
             switchAccelerometer.setChecked(false);
           }
-        } else if (intent.getAction().equals(Constants.ACTION.BROADCAST_ACCELEROMETER_DATA)) {
+        }
+        else if (intent.getAction().equals(Constants.ACTION.BROADCAST_ACCELEROMETER_DATA)) {
           long timestamp = intent.getLongExtra(Constants.KEY.TIMESTAMP, -1);
           float[] accelerometerValues = intent.getFloatArrayExtra(Constants.KEY.ACCELEROMETER_DATA);
           displayAccelerometerReading(accelerometerValues[0], accelerometerValues[1], accelerometerValues[2]);
@@ -235,24 +237,30 @@ public class ExerciseFragment extends Fragment {
               mPeakTimestamps.poll();
               mPeakValues.poll();
             }
-          } else {
+          }
+          else {
             mNumberOfPoints++;
           }
 
           updatePlot();
-        } else if (intent.getAction().equals(Constants.ACTION.BROADCAST_ANDROID_STEP_COUNT)) {
+        }
+        else if (intent.getAction().equals(Constants.ACTION.BROADCAST_ANDROID_STEP_COUNT)) {
           int stepCount = intent.getIntExtra(Constants.KEY.STEP_COUNT, 0);
           displayAndroidStepCount(stepCount);
-        } else if (intent.getAction().equals(Constants.ACTION.BROADCAST_LOCAL_STEP_COUNT)) {
+        }
+        else if (intent.getAction().equals(Constants.ACTION.BROADCAST_LOCAL_STEP_COUNT)) {
           int stepCount = intent.getIntExtra(Constants.KEY.STEP_COUNT, 0);
           displayLocalStepCount(stepCount);
-        } else if (intent.getAction().equals(Constants.ACTION.BROADCAST_SERVER_STEP_COUNT)) {
+        }
+        else if (intent.getAction().equals(Constants.ACTION.BROADCAST_SERVER_STEP_COUNT)) {
           int stepCount = intent.getIntExtra(Constants.KEY.STEP_COUNT, 0);
           displayServerStepCount(stepCount);
-        } else if (intent.getAction().equals(Constants.ACTION.BROADCAST_ACTIVITY)) {
+        }
+        else if (intent.getAction().equals(Constants.ACTION.BROADCAST_ACTIVITY)) {
           String activity = intent.getStringExtra(Constants.KEY.ACTIVITY);
           displayActivity(activity);
-        } else if (intent.getAction().equals(Constants.ACTION.BROADCAST_ACCELEROMETER_PEAK)) {
+        }
+        else if (intent.getAction().equals(Constants.ACTION.BROADCAST_ACCELEROMETER_PEAK)) {
           long timestamp = intent.getLongExtra(Constants.KEY.ACCELEROMETER_PEAK_TIMESTAMP, -1);
           float[] values = intent.getFloatArrayExtra(Constants.KEY.ACCELEROMETER_PEAK_VALUE);
           if (timestamp > 0) {
@@ -277,18 +285,18 @@ public class ExerciseFragment extends Fragment {
     final View view = inflater.inflate(R.layout.fragment_exercise, container, false);
 
     //obtain a reference to the accelerometer reading text field
-    txtAccelerometerReading = (TextView) view.findViewById(R.id.txtAccelerometerReading);
+    txtAccelerometerReading = (TextView)view.findViewById(R.id.txtAccelerometerReading);
 
     //obtain references to the step count text fields
-    txtAndroidStepCount = (TextView) view.findViewById(R.id.txtAndroidStepCount);
-    txtLocalStepCount = (TextView) view.findViewById(R.id.txtLocalStepCount);
-    txtServerStepCount = (TextView) view.findViewById(R.id.txtServerStepCount);
+    txtAndroidStepCount = (TextView)view.findViewById(R.id.txtAndroidStepCount);
+    txtLocalStepCount = (TextView)view.findViewById(R.id.txtLocalStepCount);
+    txtServerStepCount = (TextView)view.findViewById(R.id.txtServerStepCount);
 
     //obtain reference to the activity text field
-    txtActivity = (TextView) view.findViewById(R.id.txtActivity);
+    txtActivity = (TextView)view.findViewById(R.id.txtActivity);
 
     //obtain references to the on/off switches and handle the toggling appropriately
-    switchAccelerometer = (Switch) view.findViewById(R.id.switchAccelerometer);
+    switchAccelerometer = (Switch)view.findViewById(R.id.switchAccelerometer);
     switchAccelerometer.setChecked(mServiceManager.isServiceRunning(AccelerometerService.class));
     switchAccelerometer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
       @Override
@@ -300,10 +308,12 @@ public class ExerciseFragment extends Fragment {
           boolean runOverMSBand = preferences.getBoolean(getString(R.string.pref_msband_key), getResources().getBoolean(R.bool.pref_msband_default));
           if (runOverMSBand) {
             mServiceManager.startSensorService(BandService.class);
-          } else {
+          }
+          else {
             mServiceManager.startSensorService(AccelerometerService.class);
           }
-        } else {
+        }
+        else {
           mServiceManager.stopSensorService(AccelerometerService.class);
           mServiceManager.stopSensorService(BandService.class);
         }
@@ -311,7 +321,7 @@ public class ExerciseFragment extends Fragment {
     });
 
     // initialize plot and set plot parameters
-    mPlot = (XYPlot) view.findViewById(R.id.accelerometerPlot);
+    mPlot = (XYPlot)view.findViewById(R.id.accelerometerPlot);
     mPlot.setRangeBoundaries(-30, 30, BoundaryMode.FIXED);
     mPlot.setRangeStep(StepMode.SUBDIVIDE, 5);
     mPlot.getGraph().getDomainOriginLinePaint().setColor(Color.TRANSPARENT);
@@ -392,7 +402,8 @@ public class ExerciseFragment extends Fragment {
     LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(getActivity());
     try {
       broadcastManager.unregisterReceiver(receiver);
-    } catch (IllegalArgumentException e) {
+    }
+    catch (IllegalArgumentException e) {
       e.printStackTrace();
     }
     super.onStop();

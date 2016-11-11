@@ -21,6 +21,7 @@ public class Constants {
     String BROADCAST_ANDROID_STEP_COUNT = "edu.umass.cs.my-activities-toolkit.action.broadcast-android-step-count";
     String BROADCAST_LOCAL_STEP_COUNT = "edu.umass.cs.my-activities-toolkit.action.broadcast-local-step-count";
     String BROADCAST_SERVER_STEP_COUNT = "edu.umass.cs.my-activities-toolkit.action.broadcast-server-step-count";
+    String BROADCAST_SPEAKER = "edu.umass.cs.my-activities-toolkit.action.broadcast-speaker";
     String BROADCAST_ACTIVITY = "edu.umass.cs.my-activities-toolkit.action.broadcast-activity";
     String BROADCAST_PPG = "edu.umass.cs.my-activities-toolkit.action.broadcast-ppg";
     String BROADCAST_PPG_PEAK = "edu.umass.cs.my-activities-toolkit.action.broadcast-ppg-peak";
@@ -53,6 +54,7 @@ public class Constants {
     String TIMESTAMP = "edu.umass.cs.my-activities-toolkit.key.ppg-timestamp";
     String PPG_DATA = "edu.umass.cs.my-activities-toolkit.key.ppg-value";
     String HEART_RATE = "edu.umass.cs.my-activities-toolkit.key.heart-rate";
+    String SPEAKER = "edu.umass.cs.my-activities-toolkit.key.speaker";
     String STEP_COUNT = "edu.umass.cs.my-activities-toolkit.key.step-count";
     String PPG_PEAK_TIMESTAMP = "edu.umass.cs.my-activities-toolkit.key.ppg-peak-timestamp";
     String PPG_PEAK_VALUE = "edu.umass.cs.my-activities-toolkit.key.ppg-peak-value";

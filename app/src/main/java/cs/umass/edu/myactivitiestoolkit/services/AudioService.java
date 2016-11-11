@@ -92,7 +92,9 @@ public class AudioService extends SensorService implements MicrophoneRecorder.Mi
           e.printStackTrace();
           return;
         }
+
         // TODO: Send the speaker to the UI
+        broadcastSpeaker(System.currentTimeMillis(), speaker);
       }
     });
     super.onConnected();
@@ -122,6 +124,16 @@ public class AudioService extends SensorService implements MicrophoneRecorder.Mi
     Intent intent = new Intent();
     intent.putExtra(Constants.KEY.SPECTROGRAM, spectrogram);
     intent.setAction(Constants.ACTION.BROADCAST_SPECTROGRAM);
+    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+    manager.sendBroadcast(intent);
+  }
+
+  // Broadcast the speaker of the audio data
+  public void broadcastSpeaker(final long timestamp, String speaker) {
+    Intent intent = new Intent();
+    intent.putExtra(Constants.KEY.TIMESTAMP, timestamp);
+    intent.putExtra(Constants.KEY.SPEAKER, speaker);
+    intent.setAction(Constants.ACTION.BROADCAST_SPEAKER);
     LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
     manager.sendBroadcast(intent);
   }

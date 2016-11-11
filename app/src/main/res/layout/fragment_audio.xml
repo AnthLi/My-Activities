@@ -33,4 +33,14 @@
         android:layout_centerVertical="true"
         tools:ignore="ContentDescription" />
 
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text=""
+      android:textColor="@android:color/holo_blue_dark"
+      android:textSize="20sp"
+      android:id="@+id/speaker"
+      android:layout_below="@+id/imgSpectrogram"
+      android:layout_centerHorizontal="true" />
+
 </RelativeLayout>
