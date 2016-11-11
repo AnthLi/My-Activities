@@ -116,9 +116,9 @@ n_classes = len(class_names)
 cv = cross_validation.KFold(n, n_folds=10, shuffle=True, random_state=None)
 tree = DecisionTreeClassifier(criterion="entropy", max_depth=10, max_features=10)
 
-Accuracy = []
-Precision = [0,0,0]
-Recall = [0,0,0]
+Accuracy = 0
+Precision = [0, 0, 0, 0]
+Recall = [0, 0, 0, 0]
 
 for i, (train_indexes, test_indexes) in enumerate(cv):
     X_train = X[train_indexes, :]
@@ -130,27 +130,26 @@ for i, (train_indexes, test_indexes) in enumerate(cv):
     c_matrix = confusion_matrix(y_test, prediction)
 
     diag = np.diag(c_matrix)
-    accTotal = 0
-    precTotal = 0
-    recalTotal = 0
-    totalSum = sum(sum(c_matrix))*1.00000
+    totalSum = sum(sum(c_matrix)) * 1.00000
     for x in range(0, len(diag)):
-        if totalSum!=0:
-            Accuracy += c_matrix[x,x]/totalSum
-        precisionSum = sum(c_matrix[:,x])*1.00000
-        if precisionSum!=0:
-            Precision[x] += c_matrix[x,x]/precisionSum
-        recalSum = sum(c_matrix[x,:])*1.00000
-        if recalSum!=0:
-            Recall[x] += c_matrix[x,x]/recalSum
+        if totalSum != 0:
+            Accuracy += c_matrix[x, x] / totalSum
 
-print "Average accuracy:", Accuracy / (len(Accuracy)*1.0000)
+        precisionSum = sum(c_matrix[:, x]) * 1.00000
+        if precisionSum != 0:
+            Precision[x] += c_matrix[x, x] / precisionSum
+
+        recallSum = sum(c_matrix[x, :]) * 1.00000
+        if recallSum != 0:
+            Recall[x] += c_matrix[x, x] / recallSum
+
+print "Average accuracy:", Accuracy / 10
 print "Average precision:", [p / 10 for p in Precision]
 print "Average recall:", [r / 10 for r in Recall]
 
 # TODO: set your best classifier below, then uncomment the following line to train it on ALL the data:
 best_classifier = tree
-# best_classifier.fit(X,y)
+best_classifier.fit(X, y)
 
 classifier_filename='classifier.pickle'
 print("Saving best classifier to {}...".format(os.path.join(output_dir, classifier_filename)))
