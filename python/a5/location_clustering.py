@@ -18,7 +18,7 @@ import numpy as np
 from sklearn.cluster import KMeans, MeanShift
 
 # TODO: Replace the string with your user ID
-user_id = ""
+user_id = "6f.c4.bc.16.45.d8.16.a8.bd.f0"
 
 '''
     This socket is used to send data back through the data collection server.
@@ -55,10 +55,19 @@ def cluster(latitudes, longitudes, algorithm, *args):
     Android application will receive the cluster indexes.
     
     """
+
     
     # TODO: Do what the comments / assignment details tell you to do.
-    
-    return
+    #The N x 2 matrix: 
+    positions = zip(latitudes, longitudes)
+
+    if algorithm is "k_means":
+    	kmeans_labels = Kmeans(n_clusters=args[0]).fit(positions).labels_
+    	send_clusters(kmeans_labels)
+    else if algorithm is "mean_shift":
+    	ms_labels = MeanShift().fit(positions).labels_
+    	send_clusters(ms_labels)
+
     
     
 
