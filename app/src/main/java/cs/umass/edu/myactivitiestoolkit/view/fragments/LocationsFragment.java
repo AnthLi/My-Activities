@@ -42,7 +42,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -382,22 +384,51 @@ public class LocationsFragment extends Fragment {
   }
 
   /**
-   * Here you should draw clusters on the map. We have given you {@link #drawHullFromPoints(GPSLocation[], int)},
-   * which draws a convex hull around the specified points, in the given color. For each cluster,
-   * you should draw the convex hull in a unique color (it's OK if it's not unique after several
-   * clusters, as long as we can distinguish clusters that are close or overlap). We provided you
-   * with an array of colors you can index into. Make sure if you have more clusters than the size
-   * of the list to handle an {@link ArrayIndexOutOfBoundsException}, e.g. by using the modulus
+   * Here you should draw clusters on the map. We have given you
+   * {@link #drawHullFromPoints(GPSLocation[], int)}, which draws a convex hull
+   * around the specified points, in the given color. For each cluster, you
+   * should draw the convex hull in a unique color (it's OK if it's not unique
+   * after several clusters, as long as we can distinguish clusters that are
+   * close or overlap). We provided you with an array of colors you can index
+   * into. Make sure if you have more clusters than the size of the list to
+   * handle an {@link ArrayIndexOutOfBoundsException}, e.g. by using the modulus
    * operator (%).
    * <br><br>
-   * EXTRA CREDIT: You may optionally display the cluster centers as a marker. You may approximate
-   * the geographic cluster center by averaging the latitudes and longitudes separately, or
-   * you may go above and beyond and account for the spherical nature of the earth.
-   * See <a href="http://www.geomidpoint.com/calculation.html">geomidpoint.com</a> for details.
+   * EXTRA CREDIT: You may optionally display the cluster centers as a marker.
+   * You may approximate the geographic cluster center by averaging the
+   * latitudes and longitudes separately, or you may go above and beyond and
+   * account for the spherical nature of the earth. See
+   * <a href="http://www.geomidpoint.com/calculation.html">geomidpoint.com</a>
+   * for details.
    */
   private void drawClusters(final Collection<Cluster<GPSLocation>> clusters) {
-    final int[] colors = new int[]{Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.CYAN, Color.WHITE};
-    // TODO: For each cluster, draw a convex hull around the points in a sufficiently distinct color
+    final int[] colors = new int[]{
+      Color.RED,
+      Color.BLUE,
+      Color.GREEN,
+      Color.YELLOW,
+      Color.CYAN,
+      Color.WHITE
+    };
+
+    // TODO: For each cluster, draw a convex hull around the points in a
+    // sufficiently distinct color
+
+    int index = 0;
+    for (Cluster<GPSLocation> c : clusters) {
+      GPSLocation[] points = (GPSLocation[])c.getPoints().toArray();
+
+      for (GPSLocation p : points) {
+        // Add a marker for each point in the cluster
+        LatLng coord = new LatLng(p.getLatitude(), p.getLongitude());
+        map.addMarker(new MarkerOptions().position(coord));
+      }
+
+      // Take account of the number of clusters being greater than the number
+      // of available colors
+      drawHullFromPoints(points, colors[index % colors.length]);
+      index++;
+    }
   }
 
   /**
@@ -410,19 +441,27 @@ public class LocationsFragment extends Fragment {
    */
   private void runDBScan(GPSLocation[] locations, float eps, int minPts) {
     //TODO: Cluster the locations by calling DBScan.
+    DBScan<GPSLocation> dbScan = new DBScan<>(eps, minPts);
+    List<GPSLocation> locationsList = new ArrayList<>(Arrays.asList(locations));
+
+    // Draw clusters returned from DBScan
+    List<Cluster<GPSLocation>> clusters = dbScan.cluster(locationsList);
+    drawClusters(clusters);
   }
 
   /**
-   * Here you will request to cluster your n locations using k-means clustering. We have
-   * registered a listener for you and have parsed the JSON string that comes back
-   * from the server. The result is a list of n integers associating each location with
-   * one of the k clusters. Generate a list of k clusters and then call {@link #drawClusters(Collection)},
-   * passing in the list of clusters.
+   * Here you will request to cluster your n locations using k-means clustering.
+   * We have registered a listener for you and have parsed the JSON string that
+   * comes back from the server. The result is a list of n integers associating
+   * each location with one of the k clusters. Generate a list of k clusters and
+   * then call {@link #drawClusters(Collection)}, passing in the list of
+   * clusters.
    * <br><br>
-   * One way you may do this is by using a map. We've provided one for you if you would like
-   * to do it this way. Each cluster index should be associated with a cluster. If it is not yet,
-   * then instantiate a new cluster and add the association to the map. If it's already associated
-   * with a cluster, then all you need to do it update that cluster with the current GPS location
+   * One way you may do this is by using a map. We've provided one for you if
+   * you would like to do it this way. Each cluster index should be associated
+   * with a cluster. If it is not yet, then instantiate a new cluster and add
+   * the association to the map. If it's already associated with a cluster, then
+   * all you need to do it update that cluster with the current GPS location
    * in the loop iteration.
    *
    * @param locations the list of locations to be clustered.
@@ -446,8 +485,10 @@ public class LocationsFragment extends Fragment {
 
           for (int i = 0; i < indexes.length; i++) {
             int index = indexes[i];
-            //TODO: Using the index of each location, generate a list of k clusters, then call drawClusters().
-            //You may choose to use the Map defined above or find a different way of doing it.
+            // TODO: Using the index of each location, generate a list of k
+            // clusters, then call drawClusters().
+            // You may choose to use the Map defined above or find a different
+            // way of doing it.
           }
 
           // We are only allowed to manipulate the map on the main (UI) thread:
@@ -472,14 +513,16 @@ public class LocationsFragment extends Fragment {
   }
 
   /**
-   * Here you will request to cluster your n locations using mean-shift clustering. We have
-   * registered a listener for you and have parsed the JSON string that comes back
-   * from the server. The result is a list of n integers associating each location with
-   * one of the an arbitrary number of clusters. Generate a list of clusters and then
-   * call {@link #drawClusters(Collection)}, passing in the list of clusters.
+   * Here you will request to cluster your n locations using mean-shift
+   * clustering. We have registered a listener for you and have parsed the JSON
+   * string that comes back from the server. The result is a list of n integers
+   * associating each location with one of the an arbitrary number of clusters.
+   * Generate a list of clusters and then call
+   * {@link #drawClusters(Collection)}, passing in the list of clusters.
    * <br><br>
-   * You may do this the same way you did for k-means. The only difference is that we do not
-   * know the number of clusters ahead of time, but that shouldn't be a problem.
+   * You may do this the same way you did for k-means. The only difference is
+   * that we do not know the number of clusters ahead of time, but that
+   * shouldn't be a problem.
    *
    * @param locations the list of locations to be clustered.
    */
@@ -501,8 +544,10 @@ public class LocationsFragment extends Fragment {
 
           for (int i = 0; i < indexes.length; i++) {
             int index = indexes[i];
-            //TODO: Using the index of each location, generate clusters, then call drawClusters().
-            //You may choose to use the Map defined above or find a different way of doing it.
+            // TODO: Using the index of each location, generate clusters,
+            // then call drawClusters().
+            // You may choose to use the Map defined above or find a different
+            // way of doing it.
           }
 
           // We are only allowed to manipulate the map on the main (UI) thread:

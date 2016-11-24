@@ -111,7 +111,7 @@ public class DBScan<T extends Clusterable<T>> {
 
     //TODO: Implement the DBScan algorithm - currently the code returns a single
     // cluster containing all points
-    for (T p : points) {
+    for (final T p : points) {
       // Check if the point has been visited
       if (states.get(p) == State.UNVISITED) {
         // Get the neighbors of the current point
@@ -156,7 +156,7 @@ public class DBScan<T extends Clusterable<T>> {
 
     // TODO: Complete the rest of the expandCluster algorithm, as outlined in
     // the slides
-    for (T np : neighborPts) {
+    for (final T np : neighborPts) {
       // Only take account of unvisited points
       if (states.get(np) == State.UNVISITED) {
         List<T> neighbors = regionQuery(np, points);
@@ -194,7 +194,7 @@ public class DBScan<T extends Clusterable<T>> {
     final List<T> neighbors = new ArrayList<>();
 
     // Add every point to neighbors that falls within eps
-    for (T pt : points) {
+    for (final T pt : points) {
       if (p.distance(pt) <= getEps()) {
         neighbors.add(pt);
       }
