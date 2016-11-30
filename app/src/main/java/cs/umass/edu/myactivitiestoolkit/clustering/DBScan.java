@@ -111,6 +111,7 @@ public class DBScan<T extends Clusterable<T>> {
 
     //TODO: Implement the DBScan algorithm - currently the code returns a single
     // cluster containing all points
+    Cluster<T> cluster = null;
     for (final T p : points) {
       // Check if the point has been visited
       if (states.get(p) == State.UNVISITED) {
@@ -119,7 +120,9 @@ public class DBScan<T extends Clusterable<T>> {
 
         // Expand the cluster
         if (neighbors.size() >= getMinPts()) {
-          expandCluster(new Cluster<T>(), p, states, neighbors, points);
+          cluster = new Cluster<>();
+          clusters.add(cluster);
+          expandCluster(cluster, p, states, neighbors, points);
         }
         // The point has been visited, but it and its neighbors don't satisfy
         // the minimum number of points in a cluster, so it's noise
@@ -153,29 +156,28 @@ public class DBScan<T extends Clusterable<T>> {
     // we added the point p to the cluster and also flagged it as clustered for
     // you, to demonstrate how to do that
     cluster.addPoint(p);
+    states.put(p, State.CLUSTERED);
 
     // TODO: Complete the rest of the expandCluster algorithm, as outlined in
     // the slides
-    for (final T np : neighborPts) {
+    for (int i = 0; i < neighborPts.size(); i++) {
+      T currPoint = neighborPts.get(i);
+
       // Only take account of unvisited points
-      if (states.get(np) == State.UNVISITED) {
-        List<T> neighbors = regionQuery(np, points);
+      if (states.get(currPoint) == State.UNVISITED) {
+        states.put(currPoint, State.CLUSTERED);
+        cluster.addPoint(currPoint);
+        List<T> neighbors = regionQuery(currPoint, points);
 
         // Add any neighbors that aren't already in neighborPts and mark the
         // current point as clustered
         if (neighbors.size() >= getMinPts()) {
           addAsSet(neighborPts, neighbors);
-          states.put(np, State.CLUSTERED);
-        }
-        // The point has been visited, but not clustered, so it's noise
-        else {
-          states.put(np, State.NOISE);
         }
       }
 
-      // Add the point to a cluster
-      if (states.get(np) != State.CLUSTERED) {
-        cluster.addPoint(np);
+      if (states.get(currPoint) != State.CLUSTERED) {
+        cluster.addPoint(currPoint);
       }
     }
   }

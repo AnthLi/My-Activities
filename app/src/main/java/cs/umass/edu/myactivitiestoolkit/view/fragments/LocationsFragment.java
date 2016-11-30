@@ -273,13 +273,18 @@ public class LocationsFragment extends Fragment {
             float eps = Float.parseFloat(txtEps.getText().toString());
             int minPts = Integer.parseInt(txtMinPts.getText().toString());
             runDBScan(locations, eps, minPts);
+
             break;
+
           case R.id.radioButtonKMeans:
             int k = Integer.parseInt(txtKClusters.getText().toString());
             runKMeans(locations, k);
+
             break;
+
           case R.id.radioButtonMeanShift:
             runMeanShift(locations);
+
             break;
         }
         zoomInOnMarkers(100); // zoom to clusters automatically
@@ -413,21 +418,11 @@ public class LocationsFragment extends Fragment {
 
     // TODO: For each cluster, draw a convex hull around the points in a
     // sufficiently distinct color
-
     int index = 0;
     for (Cluster<GPSLocation> c : clusters) {
-      GPSLocation[] points = (GPSLocation[])c.getPoints().toArray();
-
-      for (GPSLocation p : points) {
-        // Add a marker for each point in the cluster
-        LatLng coord = new LatLng(p.getLatitude(), p.getLongitude());
-        map.addMarker(new MarkerOptions().position(coord));
-      }
-
-      // Take account of the number of clusters being greater than the number
-      // of available colors
-      drawHullFromPoints(points, colors[index % colors.length]);
-      index++;
+      int size = c.getPoints().size();
+      GPSLocation[] points = c.getPoints().toArray(new GPSLocation[size]);
+      drawHullFromPoints(points, colors[index++ % colors.length]);
     }
   }
 
@@ -489,6 +484,7 @@ public class LocationsFragment extends Fragment {
             // clusters, then call drawClusters().
             // You may choose to use the Map defined above or find a different
             // way of doing it.
+
           }
 
           // We are only allowed to manipulate the map on the main (UI) thread:
@@ -540,7 +536,6 @@ public class LocationsFragment extends Fragment {
           for (int i = 0; i < indexList.length; i++) {
             indexes[i] = Integer.parseInt(indexList[i].replace("\"", "").trim());
           }
-
 
           for (int i = 0; i < indexes.length; i++) {
             int index = indexes[i];
