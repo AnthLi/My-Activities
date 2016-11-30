@@ -66,11 +66,11 @@ def cluster(latitudes, longitudes, algorithm, *args):
     # The N x 2 matrix:
     positions = zip(latitudes, longitudes)
 
-    if algorithm is "k_means":
-        kmeans_labels = Kmeans(n_clusters=args[0]).fit(positions).labels_
+    if algorithm == "k_means":
+        kmeans_labels = KMeans(n_clusters=args[0]).fit(positions).labels_
         send_clusters(kmeans_labels)
 
-    elif algorithm is "mean_shift":
+    elif algorithm == "mean_shift":
         ms_labels = MeanShift().fit(positions).labels_
         send_clusters(ms_labels)
 
