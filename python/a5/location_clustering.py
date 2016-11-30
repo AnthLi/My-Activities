@@ -70,7 +70,7 @@ def cluster(latitudes, longitudes, algorithm, *args):
         kmeans_labels = Kmeans(n_clusters=args[0]).fit(positions).labels_
         send_clusters(kmeans_labels)
 
-    else if algorithm is "mean_shift":
+    elif algorithm is "mean_shift":
         ms_labels = MeanShift().fit(positions).labels_
         send_clusters(ms_labels)
 
