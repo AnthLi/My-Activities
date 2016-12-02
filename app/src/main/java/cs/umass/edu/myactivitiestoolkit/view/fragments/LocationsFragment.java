@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Calendar;
 
 import cs.umass.edu.myactivitiestoolkit.R;
 import cs.umass.edu.myactivitiestoolkit.clustering.Cluster;
@@ -411,15 +412,69 @@ public class LocationsFragment extends Fragment {
     ArrayList<GPSLocation> locations = cluster.getPoints();
     double totalLat = 0;
     double totalLong = 0;
+
     for (GPSLocation g : locations){
       totalLat += g.latitude;
       totalLong += g.longitude;
     }
+
     double avgLat = totalLat / ((double)locations.size());
-    double avgLong = totalLong / ((double) locations.size());
+    double avgLong = totalLong / ((double)locations.size());
     double[] coords = new double[2];
     coords[0] = avgLat;
     coords[1] = avgLong;
+    return coords;
+  }
+
+  private double[] findGeologicalCenter(Cluster<GPSLocation> cluster){
+    double totalWeightLat = 0;
+    double totalWeightLong = 0;
+    double totalWeightZ = 0;
+    double totalWeight = 0;
+
+    for(GPSLocation c : cluster.getPoints()){
+      // convert long, lat to radian
+      double lat = c.latitude * Math.PI / 180;
+      double lon = c.longitude * Math.PI / 180;
+
+      // convert to cartesian coords
+      double X = Math.cos(lat) * Math.cos(lon);
+      double Y = Math.cos(lat) * Math.sin(lon);
+      double Z = Math.sin(lat);
+
+      // compute weight by time: w = year * 365.25 + months * 30.4375 + days
+      Calendar cal = Calendar.getInstance();
+      cal.setTimeInMillis(c.timestamp);
+      int year = cal.get(Calendar.YEAR);
+      int months = cal.get(Calendar.MONTH);
+      int day = cal.get(Calendar.DAY_OF_MONTH);
+      double weight = year * 365.25 + months * 30.4375 + day;
+      
+      // add to total weight
+      totalWeight += weight;
+      totalWeightLong += (X * weight);
+      totalWeightLat += (Y * weight);
+      totalWeightZ += (Z * weight);
+    }
+
+    // normalize by weight
+    double X = totalWeightLong / totalWeight;
+    double Y = totalWeightLat / totalWeight;
+    double Z = totalWeightZ / totalWeight;
+
+    // convert X, Y back to Lon Lat values (in radians)
+    double Lon = Math.atan2(Y, X);
+    double Hyp = Math.sqrt(X * X + Y * Y);
+    double Lat = Math.atan2(Z, Hyp);
+
+    // convert back to degrees
+    double center_long = Lon * 180 / Math.PI;
+    double center_lat = Lat * 180 / Math.PI;
+
+    double[] coords = new double[2];
+    coords[0] = center_lat;
+    coords[1] = center_long;
+
     return coords;
   }
 
@@ -441,17 +496,28 @@ public class LocationsFragment extends Fragment {
       GPSLocation[] points = c.getPoints().toArray(new GPSLocation[size]);
       drawHullFromPoints(points, colors[index++ % colors.length]);
 
-      // Draw the cluster center marker
+      // Draw the native cluster center marker
       double[] coords = findCenterOfCluster(c);
-      float centerMarkerColor = BitmapDescriptorFactory.HUE_MAGENTA;
-      Marker marker = map.addMarker(
-        new MarkerOptions()
-          .position(new LatLng(coords[0], coords[1]))
-          .title("Cluster Center")
-          .icon(BitmapDescriptorFactory.defaultMarker(centerMarkerColor))
+      float centerMarkerColor = BitmapDescriptorFactory.HUE_YELLOW;
+      Marker centerMarker = map.addMarker(new MarkerOptions()
+        .position(new LatLng(coords[0], coords[1]))
+        .title("Native Cluster Center")
+        .icon(BitmapDescriptorFactory.defaultMarker(centerMarkerColor))
       );
 
-      locationMarkers.add(marker);
+      locationMarkers.add(centerMarker);
+
+      // Draw the geological cluster center marker
+      double[] geo_coords = findGeologicalCenter(c);
+      float geoMarkerColor = BitmapDescriptorFactory.HUE_AZURE;
+      Marker geo_marker = map.addMarker(new MarkerOptions()
+        .position(new LatLng(geo_coords[0], geo_coords[1]))
+        .title("Geological Cluster Center")
+        .icon(BitmapDescriptorFactory.defaultMarker(geoMarkerColor))
+      );
+
+      locationMarkers.add(geo_marker);
+
     }
   }
 
@@ -544,17 +610,15 @@ public class LocationsFragment extends Fragment {
       }
     });
     client.connect();
-    client.sendSensorReading(
-      new ClusteringRequest(
-        userID,
-        "",
-        "",
-        System.currentTimeMillis(),
-        locations,
-        "k_means",
-        k
-      )
-    );
+    client.sendSensorReading(new ClusteringRequest(
+      userID,
+      "",
+      "",
+      System.currentTimeMillis(),
+      locations,
+      "k_means",
+      k
+    ));
   }
 
   /**
@@ -624,7 +688,15 @@ public class LocationsFragment extends Fragment {
       }
     });
     client.connect();
-    client.sendSensorReading(new ClusteringRequest(userID, "", "", System.currentTimeMillis(), locations, "mean_shift", -1));
+    client.sendSensorReading(new ClusteringRequest(
+      userID,
+      "",
+      "",
+      System.currentTimeMillis(),
+      locations,
+      "mean_shift",
+      -1
+    ));
   }
 
   /**
