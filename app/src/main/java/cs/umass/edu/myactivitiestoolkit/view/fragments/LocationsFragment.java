@@ -32,6 +32,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -455,7 +456,7 @@ public class LocationsFragment extends Fragment {
     //draw the cluster center marker
     for(Cluster<GPSLocation> c: clusters){
       double[] coords = findCenterOfCluster(c);
-      Marker marker = map.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title("Cluster Center")); //sets the latitude & longitude
+      Marker marker = map.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title("Cluster Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))); //sets the latitude & longitude
       locationMarkers.add(marker);
     }
   }
