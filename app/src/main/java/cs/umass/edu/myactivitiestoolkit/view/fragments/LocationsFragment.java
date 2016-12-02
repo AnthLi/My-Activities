@@ -456,7 +456,9 @@ public class LocationsFragment extends Fragment {
     //draw the cluster center marker
     for(Cluster<GPSLocation> c: clusters){
       double[] coords = findCenterOfCluster(c);
-      Marker marker = map.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title("Cluster Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))); //sets the latitude & longitude
+      PlaceFilter filter = new PlaceFilter();
+      String placeName = PlaceDetectionAPI.getCurrentPlace(mGoogleApiClient, filter);
+      Marker marker = map.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title(placeName + " Center Cluster").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))); //sets the latitude & longitude
       locationMarkers.add(marker);
     }
   }
