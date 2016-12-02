@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Calendar;
 
 import cs.umass.edu.myactivitiestoolkit.R;
 import cs.umass.edu.myactivitiestoolkit.clustering.Cluster;
@@ -423,6 +424,57 @@ public class LocationsFragment extends Fragment {
     return coords;
   }
 
+  private double[] findGeologicalCenter(Cluster<GPSLocation> cluster){
+    double totalWeightLat = 0;
+    double totalWeightLong = 0;
+    double totalWeightZ = 0;
+    double totalWeight = 0;
+
+
+    for(GPSLocation c : cluster.getPoints()){
+      //convert long, lat to radian
+      double lat = c.latitude*Math.PI/180;
+      double lon = c.longitude*Math.PI/180;
+
+      //comvert to cartesian coords
+      double X = Math.cos(lat) * Math.cos(lon);
+      double Y = Math.cos(lat) * Math.sin(lon);
+      double Z = Math.sin(lat);
+
+      //compute weight by time: w = year*365.25 + months*30.4375 + days 
+      Calendar cal = Calendar.getInstance();
+      cal.setTimeInMillis(c.timestamp);
+      int year = cal.get(Calendar.YEAR);
+      int months = cal.get(Calendar.MONTH);
+      int day = cal.get(Calendar.DAY_OF_MONTH);
+      double weight = year*365.25 + months * 30.4375 + day;
+      
+      //add to total weight
+      totalWeight += weight;
+      totalWeightLong += (X*weight);
+      totalWeightLat += (Y*weight);
+      totalWeightZ += (Z*weight);
+    }
+    //normalize by weight
+    double X = totalWeightLat/totalWeight;
+    double Y = totalWeightLong/totalWeight;
+    double Z = totalWeightZ/totalWeight;
+    //convert X,Y back to Lon Lat values (in radians)
+    double Lon = Math.atan2(Y,X);
+    double Hyp = Math.sqrt(X*X+Y*Y);
+    double Lat = atan2(Z, Hyp);
+
+    //convert back to degrees
+    double center_long = Lon * 180/Math.PI;
+    double center_lat = Lat * 180/Math.PI;
+
+    double[] coords = new double[2];
+    coords[0] = center_lat;
+    coords[1] = center_long;
+    return coords;
+
+  }
+
   private void drawClusters(final Collection<Cluster<GPSLocation>> clusters) {
     final int[] colors = new int[]{
       Color.RED,
@@ -442,10 +494,16 @@ public class LocationsFragment extends Fragment {
       drawHullFromPoints(points, colors[index++ % colors.length]);
     }
     //draw the cluster center marker
+    //YELLOW IS THE NAIVE CENTER
+    //AZURE IS THE GEOLOGICAL CENTER
     for(Cluster<GPSLocation> c: clusters){
       double[] coords = findCenterOfCluster(c);
-      Marker marker = map.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title("Cluster Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))); //sets the latitude & longitude
+      double[] geo_coords = findGeologicalCenter(c);
+      Marker marker = map.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title("Naive Cluster Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))); 
       locationMarkers.add(marker);
+      Marker geo_marker = map.addMarker(new MarkerOptions().position(new LatLng(geo_coords[0], geo_coords[1])).title("Geological Cluster Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))); 
+      locationMarkers.add(geo_marker);
+
     }
   }
 
