@@ -439,12 +439,18 @@ public class LocationsFragment extends Fragment {
     for (Cluster<GPSLocation> c : clusters) {
       int size = c.getPoints().size();
       GPSLocation[] points = c.getPoints().toArray(new GPSLocation[size]);
-      drawHullFromPoints(points, colors[index++ % colors.length]);
-    }
-    //draw the cluster center marker
-    for(Cluster<GPSLocation> c: clusters){
+      int color = colors[index++ % colors.length];
+      drawHullFromPoints(points, color);
+
+      // Draw the cluster center marker
       double[] coords = findCenterOfCluster(c);
-      Marker marker = map.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title("Cluster Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))); //sets the latitude & longitude
+      Marker marker = map.addMarker(
+        new MarkerOptions()
+          .position(new LatLng(coords[0], coords[1]))
+          .title("Cluster Center")
+          .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+      );
+
       locationMarkers.add(marker);
     }
   }
@@ -538,7 +544,17 @@ public class LocationsFragment extends Fragment {
       }
     });
     client.connect();
-    client.sendSensorReading(new ClusteringRequest(userID, "", "", System.currentTimeMillis(), locations, "k_means", k));
+    client.sendSensorReading(
+      new ClusteringRequest(
+        userID,
+        "",
+        "",
+        System.currentTimeMillis(),
+        locations,
+        "k_means",
+        k
+      )
+    );
   }
 
   /**
