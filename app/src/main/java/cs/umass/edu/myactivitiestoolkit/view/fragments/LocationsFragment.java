@@ -439,16 +439,16 @@ public class LocationsFragment extends Fragment {
     for (Cluster<GPSLocation> c : clusters) {
       int size = c.getPoints().size();
       GPSLocation[] points = c.getPoints().toArray(new GPSLocation[size]);
-      int color = colors[index++ % colors.length];
-      drawHullFromPoints(points, color);
+      drawHullFromPoints(points, colors[index++ % colors.length]);
 
       // Draw the cluster center marker
       double[] coords = findCenterOfCluster(c);
+      float centerMarkerColor = BitmapDescriptorFactory.HUE_MAGENTA;
       Marker marker = map.addMarker(
         new MarkerOptions()
           .position(new LatLng(coords[0], coords[1]))
           .title("Cluster Center")
-          .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+          .icon(BitmapDescriptorFactory.defaultMarker(centerMarkerColor))
       );
 
       locationMarkers.add(marker);
