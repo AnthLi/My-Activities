@@ -408,34 +408,32 @@ public class LocationsFragment extends Fragment {
    * <a href="http://www.geomidpoint.com/calculation.html">geomidpoint.com</a>
    * for details.
    */
-  private double[] findCenterOfCluster(Cluster<GPSLocation> cluster){
+  private double[] findAverageCenter(Cluster<GPSLocation> cluster) {
     ArrayList<GPSLocation> locations = cluster.getPoints();
     double totalLat = 0;
     double totalLong = 0;
 
-    for (GPSLocation g : locations){
+    for (GPSLocation g : locations) {
       totalLat += g.latitude;
       totalLong += g.longitude;
     }
 
     double avgLat = totalLat / ((double)locations.size());
     double avgLong = totalLong / ((double)locations.size());
-    double[] coords = new double[2];
-    coords[0] = avgLat;
-    coords[1] = avgLong;
-    return coords;
+
+    return new double[] {avgLat, avgLong};
   }
 
-  private double[] findGeologicalCenter(Cluster<GPSLocation> cluster){
+  private double[] findGeologicalCenter(Cluster<GPSLocation> cluster) {
     double totalWeightLat = 0;
-    double totalWeightLong = 0;
+    double totalWeightLon = 0;
     double totalWeightZ = 0;
     double totalWeight = 0;
 
-    for(GPSLocation c : cluster.getPoints()){
-      // convert long, lat to radian
-      double lat = c.latitude * Math.PI / 180;
-      double lon = c.longitude * Math.PI / 180;
+    for(GPSLocation c : cluster.getPoints()) {
+      // convert lat, long to radians
+      double lat = c.getLatitude() * Math.PI / 180;
+      double lon = c.getLongitude() * Math.PI / 180;
 
       // convert to cartesian coords
       double X = Math.cos(lat) * Math.cos(lon);
@@ -444,21 +442,22 @@ public class LocationsFragment extends Fragment {
 
       // compute weight by time: w = year * 365.25 + months * 30.4375 + days
       Calendar cal = Calendar.getInstance();
-      cal.setTimeInMillis(c.timestamp);
+      cal.setTimeInMillis(c.getTimestamp());
       int year = cal.get(Calendar.YEAR);
-      int months = cal.get(Calendar.MONTH);
+      int month = cal.get(Calendar.MONTH) + 1;
       int day = cal.get(Calendar.DAY_OF_MONTH);
-      double weight = year * 365.25 + months * 30.4375 + day;
+
+      double weight = year * 365.25 + month * 30.4375 + day;
       
       // add to total weight
       totalWeight += weight;
-      totalWeightLong += (X * weight);
+      totalWeightLon += (X * weight);
       totalWeightLat += (Y * weight);
       totalWeightZ += (Z * weight);
     }
 
     // normalize by weight
-    double X = totalWeightLong / totalWeight;
+    double X = totalWeightLon / totalWeight;
     double Y = totalWeightLat / totalWeight;
     double Z = totalWeightZ / totalWeight;
 
@@ -468,14 +467,10 @@ public class LocationsFragment extends Fragment {
     double Lat = Math.atan2(Z, Hyp);
 
     // convert back to degrees
-    double center_long = Lon * 180 / Math.PI;
     double center_lat = Lat * 180 / Math.PI;
+    double center_lon = Lon * 180 / Math.PI;
 
-    double[] coords = new double[2];
-    coords[0] = center_lat;
-    coords[1] = center_long;
-
-    return coords;
+    return new double[] {center_lat, center_lon};
   }
 
   private void drawClusters(final Collection<Cluster<GPSLocation>> clusters) {
@@ -496,28 +491,23 @@ public class LocationsFragment extends Fragment {
       GPSLocation[] points = c.getPoints().toArray(new GPSLocation[size]);
       drawHullFromPoints(points, colors[index++ % colors.length]);
 
-      // Draw the native cluster center marker
-      double[] coords = findCenterOfCluster(c);
+      // Draw the average cluster center marker
+      double[] coords = findAverageCenter(c);
       float centerMarkerColor = BitmapDescriptorFactory.HUE_YELLOW;
-      Marker centerMarker = map.addMarker(new MarkerOptions()
+      locationMarkers.add(map.addMarker(new MarkerOptions()
         .position(new LatLng(coords[0], coords[1]))
-        .title("Native Cluster Center")
+        .title("Average Cluster Center")
         .icon(BitmapDescriptorFactory.defaultMarker(centerMarkerColor))
-      );
-
-      locationMarkers.add(centerMarker);
+      ));
 
       // Draw the geological cluster center marker
       double[] geo_coords = findGeologicalCenter(c);
       float geoMarkerColor = BitmapDescriptorFactory.HUE_AZURE;
-      Marker geo_marker = map.addMarker(new MarkerOptions()
+      locationMarkers.add(map.addMarker(new MarkerOptions()
         .position(new LatLng(geo_coords[0], geo_coords[1]))
-        .title("Geological Cluster Center")
+        .title("Geolographic Cluster Center")
         .icon(BitmapDescriptorFactory.defaultMarker(geoMarkerColor))
-      );
-
-      locationMarkers.add(geo_marker);
-
+      ));
     }
   }
 
