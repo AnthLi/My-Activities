@@ -65,6 +65,10 @@ import cs.umass.edu.myactivitiestoolkit.util.PermissionsUtil;
 import edu.umass.cs.MHLClient.client.MessageReceiver;
 import edu.umass.cs.MHLClient.client.MobileIOClient;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import android.support.v4.app.FragmentActivity;
+
 /**
  * Fragment which visualizes the stored locations along with their clusters and allows
  * the user to select a clustering algorithm and change its parameters. The locations
@@ -189,6 +193,14 @@ public class LocationsFragment extends Fragment {
     serviceManager = ServiceManager.getInstance(getActivity());
     userID = getString(R.string.mobile_health_client_user_id);
     client = MobileIOClient.getInstance(getActivity(), userID);
+
+    //Google API Client Builder
+    mGoogleApiClient = new GoogleApiClient
+            .Builder(this)
+            .addApi(Places.GEO_DATA_API)
+            .addApi(Places.PLACE_DETECTION_API)
+            .enableAutoManage(this, this)
+            .build();
   }
 
   @Override
