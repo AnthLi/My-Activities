@@ -418,6 +418,22 @@ public class LocationsFragment extends Fragment {
    * <a href="http://www.geomidpoint.com/calculation.html">geomidpoint.com</a>
    * for details.
    */
+  private double[] findCenterOfCluster(Cluster<GPSLocation> cluster){
+    ArrayList<GPSLocation> locations = cluster.getPoints();
+    double totalLat = 0;
+    double totalLong = 0;
+    for (GPSLocation g : locations){
+      totalLat += g.latitude;
+      totalLong += g.longitude;
+    }
+    double avgLat = totalLat / ((double)locations.size());
+    double avgLong = totalLong / ((double) locations.size());
+    double[] coords = new double[2];
+    coords[0] = avgLat;
+    coords[1] = avgLong;
+    return coords;
+  }
+
   private void drawClusters(final Collection<Cluster<GPSLocation>> clusters) {
     final int[] colors = new int[]{
       Color.RED,
@@ -435,6 +451,12 @@ public class LocationsFragment extends Fragment {
       int size = c.getPoints().size();
       GPSLocation[] points = c.getPoints().toArray(new GPSLocation[size]);
       drawHullFromPoints(points, colors[index++ % colors.length]);
+    }
+    //draw the cluster center marker
+    for(Cluster<GPSLocation> c: clusters){
+      double[] coords = findCenterOfCluster(c);
+      Marker marker = map.addMarker(new MarkerOptions().position(new LatLng(coords[0], coords[1])).title("Cluster Center")); //sets the latitude & longitude
+      locationMarkers.add(marker);
     }
   }
 
