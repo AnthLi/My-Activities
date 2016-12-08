@@ -65,11 +65,12 @@ public class BeActiveFragment extends Fragment {
 
   private ServiceManager mServiceManager;
 
-  private static BeActiveFragment ourInstance = new BeActiveFragment();
+  private final BroadcastReceiver receiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
 
-  public static BeActiveFragment getInstance() {
-    return ourInstance;
-  }
+    }
+  };
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -105,12 +106,23 @@ public class BeActiveFragment extends Fragment {
 
   @Override
   public void onStart() {
+    super.onStart();
 
+    LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(getActivity());
+    IntentFilter filter = new IntentFilter();
+//    filter.addAction(Constants.ACTION.BROADCAST_MESSAGE);
+//    filter.addAction(Constants.ACTION.BROADCAST_ACCELEROMETER_DATA);
+//    filter.addAction(Constants.ACTION.BROADCAST_ACCELEROMETER_PEAK);
+//    filter.addAction(Constants.ACTION.BROADCAST_ANDROID_STEP_COUNT);
+//    filter.addAction(Constants.ACTION.BROADCAST_LOCAL_STEP_COUNT);
+//    filter.addAction(Constants.ACTION.BROADCAST_SERVER_STEP_COUNT);
+//    filter.addAction(Constants.ACTION.BROADCAST_ACTIVITY);
+    broadcastManager.registerReceiver(receiver, filter);
   }
 
   @Override
   public void onStop() {
-
+    super.onStop();
   }
 
   private void updatePlot() {
@@ -118,6 +130,6 @@ public class BeActiveFragment extends Fragment {
   }
 
   private void clearPlotData() {
-    pieChart.clear();
+//    pieChart.clear();
   }
 }
