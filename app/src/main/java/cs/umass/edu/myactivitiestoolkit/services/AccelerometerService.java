@@ -5,15 +5,11 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Build;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Locale;
 
 import cs.umass.edu.myactivitiestoolkit.R;
 import cs.umass.edu.myactivitiestoolkit.constants.Constants;
@@ -24,8 +20,6 @@ import edu.umass.cs.MHLClient.client.MessageReceiver;
 import edu.umass.cs.MHLClient.client.MobileIOClient;
 import edu.umass.cs.MHLClient.sensors.AccelerometerReading;
 import edu.umass.cs.MHLClient.sensors.SensorReading;
-
-import java.util.ArrayList;
 
 /**
  * This service is responsible for collecting the accelerometer data on
@@ -123,8 +117,6 @@ public class AccelerometerService extends SensorService implements SensorEventLi
 
   private int mServerStepCount = 0;
 
-  private Filter filter;
-
   private OnStepListener stepListener = new OnStepListener() {
     @Override
     public void onStepCountUpdated(int stepCount) {
@@ -177,12 +169,19 @@ public class AccelerometerService extends SensorService implements SensorEventLi
       // TODO : broadcast activity to UI
       @Override
       protected void onMessageReceived(JSONObject json) {
-        String activity;
-
         try {
           JSONObject data = json.getJSONObject("data");
-          activity = data.getString("activity");
-          broadcastActivityDetected(activity);
+          String activity = data.getString("activity");
+
+          // Differentiate between A2 and the final project by checking for a
+          // timestamp associated with the JSON data
+          if (data.isNull("timestamp")) {
+            broadcastActivityDetected(activity);
+          }
+          else {
+            long timestamp = data.getLong("timestamp");
+            broadcastBeActiveDetected(activity, timestamp);
+          }
         } catch (JSONException e) {
           e.printStackTrace();
         }
@@ -203,7 +202,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
     mSensorManager.registerListener(
       this,
       mAccelerometerSensor,
-      mSensorManager.SENSOR_DELAY_NORMAL
+      SensorManager.SENSOR_DELAY_NORMAL
     );
 
     // TODO : (Assignment 1)
@@ -213,14 +212,14 @@ public class AccelerometerService extends SensorService implements SensorEventLi
     mSensorManager.registerListener(
       this,
       mStepSensor,
-      mSensorManager.SENSOR_DELAY_NORMAL
+      SensorManager.SENSOR_DELAY_NORMAL
     );
 
     // Register the step detector to the accelerometer
     mSensorManager.registerListener(
       mStepDetector,
       mAccelerometerSensor,
-      mSensorManager.SENSOR_DELAY_NORMAL
+      SensorManager.SENSOR_DELAY_NORMAL
     );
 
     // Register the step listener
@@ -297,7 +296,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
       long timestamp_in_milliseconds = (long)((double)event.timestamp / Constants.TIMESTAMPS.NANOSECONDS_PER_MILLISECOND);
 
       // Filter the event values
-      filter = new Filter(1);
+      Filter filter = new Filter(1);
       double[] filteredValues = filter.getFilteredValues(event.values);
       float[] filteredFloatValues = new float[filteredValues.length];
 
@@ -311,7 +310,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
         "MOBILE",
         "",
         timestamp_in_milliseconds,
-        3,
+        1,
         filteredFloatValues
       ));
 
@@ -338,7 +337,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
    *
    * @param accelerometerReadings the x, y, and z accelerometer readings
    */
-  public void broadcastAccelerometerReading(final long timestamp, final float[] accelerometerReadings) {
+  private void broadcastAccelerometerReading(final long timestamp, final float[] accelerometerReadings) {
     Intent intent = new Intent();
     intent.putExtra(Constants.KEY.TIMESTAMP, timestamp);
     intent.putExtra(Constants.KEY.ACCELEROMETER_DATA, accelerometerReadings);
@@ -353,7 +352,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
    * Broadcasts the step count computed by the Android built-in step detection
    * algorithm to other application components, e.g. the main UI.
    */
-  public void broadcastAndroidStepCount(int stepCount) {
+  private void broadcastAndroidStepCount(int stepCount) {
     Intent intent = new Intent();
     intent.putExtra(Constants.KEY.STEP_COUNT, stepCount);
     intent.setAction(Constants.ACTION.BROADCAST_ANDROID_STEP_COUNT);
@@ -365,7 +364,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
    * Broadcasts the step count computed by your step detection algorithm
    * to other application components, e.g. the main UI.
    */
-  public void broadcastLocalStepCount(int stepCount) {
+  private void broadcastLocalStepCount(int stepCount) {
     Intent intent = new Intent();
     intent.putExtra(Constants.KEY.STEP_COUNT, stepCount);
     intent.setAction(Constants.ACTION.BROADCAST_LOCAL_STEP_COUNT);
@@ -376,7 +375,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
 
   // TODO: (Assignment 1)
   // Broadcast the step count as computed by your server-side algorithm.
-  public void broadcastServerStepDetected(int stepCount) {
+  private void broadcastServerStepDetected(int stepCount) {
     Intent intent = new Intent();
     intent.putExtra(Constants.KEY.STEP_COUNT, stepCount);
     intent.setAction(Constants.ACTION.BROADCAST_SERVER_STEP_COUNT);
@@ -389,7 +388,7 @@ public class AccelerometerService extends SensorService implements SensorEventLi
    * Use this if you would like to visualize the detected step on the
    * accelerometer signal.
    */
-  public void broadcastStepDetected(long timestamp, float[] values) {
+  private void broadcastStepDetected(long timestamp, float[] values) {
     Intent intent = new Intent();
     intent.putExtra(Constants.KEY.ACCELEROMETER_PEAK_TIMESTAMP, timestamp);
     intent.putExtra(Constants.KEY.ACCELEROMETER_PEAK_VALUE, values);
@@ -399,10 +398,20 @@ public class AccelerometerService extends SensorService implements SensorEventLi
   }
 
   // Broadcast the activity to the main UI
-  public void broadcastActivityDetected(String activity) {
+  private void broadcastActivityDetected(String activity) {
     Intent intent = new Intent();
     intent.putExtra(Constants.KEY.ACTIVITY, activity);
     intent.setAction(Constants.ACTION.BROADCAST_ACTIVITY);
+    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+    manager.sendBroadcast(intent);
+  }
+
+  // Broadcast the current activity and timestamp to the Be Active UI
+  private void broadcastBeActiveDetected(String activity, long timestamp) {
+    Intent intent = new Intent();
+    intent.putExtra(Constants.KEY.BE_ACTIVE_ACTIVITY, activity);
+    intent.putExtra(Constants.KEY.BE_ACTIVE_TIMESTAMP, timestamp);
+    intent.setAction(Constants.ACTION.BROADCAST_BE_ACTIVE);
     LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
     manager.sendBroadcast(intent);
   }

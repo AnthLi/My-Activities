@@ -1,3 +1,7 @@
+/**
+ * Created by anthonyli on 12/7/16.
+ */
+
 package cs.umass.edu.myactivitiestoolkit.view.fragments;
 
 import android.app.Fragment;
@@ -45,9 +49,6 @@ import cs.umass.edu.myactivitiestoolkit.services.msband.BandService;
 import cs.umass.edu.myactivitiestoolkit.services.AccelerometerService;
 import cs.umass.edu.myactivitiestoolkit.services.ServiceManager;
 
-/**
- * Created by anthonyli on 12/7/16.
- */
 public class BeActiveFragment extends Fragment {
 
   @SuppressWarnings("unused")
@@ -68,7 +69,29 @@ public class BeActiveFragment extends Fragment {
   private final BroadcastReceiver receiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
+      if (intent.getAction() != null) {
+        return;
+      }
 
+      switch (intent.getAction()) {
+        case Constants.ACTION.BROADCAST_MESSAGE:
+          int message = intent.getIntExtra(Constants.KEY.MESSAGE, -1);
+          if (message == Constants.MESSAGE.ACCELEROMETER_SERVICE_STOPPED) {
+            switchAccelerometer.setChecked(false);
+          }
+
+          break;
+
+        case Constants.ACTION.BROADCAST_BE_ACTIVE:
+          String activity = intent.getStringExtra(Constants.KEY.BE_ACTIVE_ACTIVITY);
+          long timestamp = intent.getLongExtra(Constants.KEY.BE_ACTIVE_TIMESTAMP, -1);
+
+          // Do something with the timestamp
+
+          displayActivity(activity);
+
+          break;
+      }
     }
   };
 
@@ -79,9 +102,7 @@ public class BeActiveFragment extends Fragment {
   }
 
   @Override
-  public View onCreateView(
-    LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
-  ) {
+  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     final View view = inflater.inflate(R.layout.fragment_be_active, container, false);
 
     txtActivity = (TextView)view.findViewById(R.id.txtActivity);
@@ -110,13 +131,8 @@ public class BeActiveFragment extends Fragment {
 
     LocalBroadcastManager broadcastManager = LocalBroadcastManager.getInstance(getActivity());
     IntentFilter filter = new IntentFilter();
-//    filter.addAction(Constants.ACTION.BROADCAST_MESSAGE);
-//    filter.addAction(Constants.ACTION.BROADCAST_ACCELEROMETER_DATA);
-//    filter.addAction(Constants.ACTION.BROADCAST_ACCELEROMETER_PEAK);
-//    filter.addAction(Constants.ACTION.BROADCAST_ANDROID_STEP_COUNT);
-//    filter.addAction(Constants.ACTION.BROADCAST_LOCAL_STEP_COUNT);
-//    filter.addAction(Constants.ACTION.BROADCAST_SERVER_STEP_COUNT);
-//    filter.addAction(Constants.ACTION.BROADCAST_ACTIVITY);
+    filter.addAction(Constants.ACTION.BROADCAST_MESSAGE);
+    filter.addAction(Constants.ACTION.BROADCAST_BE_ACTIVE);
     broadcastManager.registerReceiver(receiver, filter);
   }
 
@@ -125,7 +141,16 @@ public class BeActiveFragment extends Fragment {
     super.onStop();
   }
 
-  private void updatePlot() {
+  private void displayActivity(final String activity) {
+    getActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        txtActivity.setText(activity);
+      }
+    });
+  }
+
+  private void updatePieChart() {
 
   }
 

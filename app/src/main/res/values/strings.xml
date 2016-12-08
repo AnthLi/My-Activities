@@ -25,15 +25,6 @@
 
   <string name="action_settings">Settings</string>
 
-  <!-- Final project start-->
-
-  <string name="be_active_sedentary">Sedentary</string>
-  <string name="be_active_active">Active</string>
-
-  <string name="text_switch_be_active">Be Active</string>
-
-  <!-- Final project end -->
-
   <string name="android_step_count_initial">Android: 0</string>
   <string name="local_step_count_initial">Local: 0</string>
   <string name="server_step_count_initial">Server: 0</string>
@@ -60,4 +51,9 @@
 
   <!-- TODO: Remove or change this placeholder text -->
   <string name="hello_blank_fragment">Hello blank fragment</string>
+
+  <string name="be_active_sedentary">Sedentary</string>
+  <string name="be_active_active">Active</string>
+
+  <string name="text_switch_be_active">Be Active</string>
 </resources>
