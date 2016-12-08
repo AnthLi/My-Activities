@@ -53,6 +53,8 @@ public class BeActiveFragment extends Fragment {
   @SuppressWarnings("unused")
   private static final String TAG = ExerciseFragment.class.getName();
 
+  private Switch switchAccelerometer;
+
   private TextView txtActivity;
 
   private PieChart pieChart;
@@ -61,7 +63,7 @@ public class BeActiveFragment extends Fragment {
 
   private List<Integer> activeMinutes = new ArrayList<>();
 
-
+  private ServiceManager mServiceManager;
 
   private static BeActiveFragment ourInstance = new BeActiveFragment();
 
@@ -69,6 +71,53 @@ public class BeActiveFragment extends Fragment {
     return ourInstance;
   }
 
-  private BeActiveFragment() {
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    this.mServiceManager = ServiceManager.getInstance(getActivity());
+  }
+
+  @Override
+  public View onCreateView(
+    LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
+  ) {
+    final View view = inflater.inflate(R.layout.fragment_be_active, container, false);
+
+    txtActivity = (TextView)view.findViewById(R.id.txtActivity);
+
+    switchAccelerometer = (Switch)view.findViewById(R.id.switchAccelerometer);
+    switchAccelerometer.setChecked(mServiceManager.isServiceRunning(AccelerometerService.class));
+    switchAccelerometer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton compoundButton, boolean enabled) {
+        if (enabled) {
+          clearPlotData();
+          mServiceManager.startSensorService(AccelerometerService.class);
+        }
+        else {
+          mServiceManager.stopSensorService(AccelerometerService.class);
+        }
+      }
+    });
+
+    return view;
+  }
+
+  @Override
+  public void onStart() {
+
+  }
+
+  @Override
+  public void onStop() {
+
+  }
+
+  private void updatePlot() {
+
+  }
+
+  private void clearPlotData() {
+    pieChart.clear();
   }
 }
