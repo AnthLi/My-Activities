@@ -31,13 +31,11 @@ public class BeActiveService extends SensorService implements SensorEventListene
 
   @Override
   protected void onServiceStarted() {
-    System.out.println("STARTED");
     broadcastMessage(Constants.MESSAGE.BE_ACTIVE_SERVICE_STARTED);
   }
 
   @Override
   protected void onServiceStopped() {
-    System.out.println("STOPPED");
     broadcastMessage(Constants.MESSAGE.BE_ACTIVE_SERVICE_STOPPED);
   }
 

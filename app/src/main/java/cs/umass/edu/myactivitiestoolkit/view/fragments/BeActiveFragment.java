@@ -31,37 +31,49 @@ public class BeActiveFragment extends Fragment {
 
   private Switch switchBeActive;
 
+  // Text view used to display the current activity performed by the user
   private TextView txtActivity;
 
+  // Pie chart to display the ratio between sedentary and active
   private PieChart pieChart;
 
-  private List<Integer> sittingMinutes = new ArrayList<>();
+  // List containing the timestamps associated with sitting
+  private List<Long> sittingTimestamps = new ArrayList<>();
 
-  private List<Integer> activeMinutes = new ArrayList<>();
+  // List containing the timestamps associated with being active
+  private List<Long> activeTimestamps = new ArrayList<>();
 
   private ServiceManager mServiceManager;
 
   private final BroadcastReceiver receiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
-      if (intent.getAction() != null) {
+      if (intent.getAction() == null) {
         return;
       }
 
       switch (intent.getAction()) {
         case Constants.ACTION.BROADCAST_MESSAGE:
           int message = intent.getIntExtra(Constants.KEY.MESSAGE, -1);
+
+          // Turn the switch off when the service has stopped
           if (message == Constants.MESSAGE.BE_ACTIVE_SERVICE_STOPPED) {
             switchBeActive.setChecked(false);
           }
 
           break;
 
+        // Display the current activity and
         case Constants.ACTION.BROADCAST_BE_ACTIVE:
           String activity = intent.getStringExtra(Constants.KEY.BE_ACTIVE_ACTIVITY);
           long timestamp = intent.getLongExtra(Constants.KEY.BE_ACTIVE_TIMESTAMP, -1);
 
-          // Do something with the timestamp
+          if (activity.equals("active")) {
+            sittingTimestamps.add(timestamp);
+          }
+          else if (activity.equals("sedentary")) {
+            activeTimestamps.add(timestamp);
+          }
 
           displayActivity(activity);
 
