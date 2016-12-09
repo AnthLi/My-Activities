@@ -119,7 +119,7 @@ public class BeActiveService extends SensorService implements SensorEventListene
         "MOBILE",
         "",
         timestamp_in_milliseconds,
-        1,
+        2,
         filteredFloatValues
       ));
     } else {

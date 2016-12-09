@@ -52,6 +52,8 @@
   <!-- TODO: Remove or change this placeholder text -->
   <string name="hello_blank_fragment">Hello blank fragment</string>
 
+  <string name="be_active">Be Active</string>
+
   <string name="be_active_started">Activity Monitor Started</string>
   <string name="be_active_stopped">Activity Monitor Stopped</string>
 

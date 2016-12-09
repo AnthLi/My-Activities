@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     }, BE_ACTIVE(BeActiveFragment.class) {
       @Override
       public String getTitle() {
-        return "Simple XY Plot Example";
+        return "Be Active";
       }
 
       @Override
