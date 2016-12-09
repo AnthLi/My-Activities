@@ -178,10 +178,6 @@ public class AccelerometerService extends SensorService implements SensorEventLi
           if (data.isNull("timestamp")) {
             broadcastActivityDetected(activity);
           }
-          else {
-            long timestamp = data.getLong("timestamp");
-            broadcastBeActiveDetected(activity, timestamp);
-          }
         } catch (JSONException e) {
           e.printStackTrace();
         }
@@ -402,16 +398,6 @@ public class AccelerometerService extends SensorService implements SensorEventLi
     Intent intent = new Intent();
     intent.putExtra(Constants.KEY.ACTIVITY, activity);
     intent.setAction(Constants.ACTION.BROADCAST_ACTIVITY);
-    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
-    manager.sendBroadcast(intent);
-  }
-
-  // Broadcast the current activity and timestamp to the Be Active UI
-  private void broadcastBeActiveDetected(String activity, long timestamp) {
-    Intent intent = new Intent();
-    intent.putExtra(Constants.KEY.BE_ACTIVE_ACTIVITY, activity);
-    intent.putExtra(Constants.KEY.BE_ACTIVE_TIMESTAMP, timestamp);
-    intent.setAction(Constants.ACTION.BROADCAST_BE_ACTIVE);
     LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
     manager.sendBroadcast(intent);
   }

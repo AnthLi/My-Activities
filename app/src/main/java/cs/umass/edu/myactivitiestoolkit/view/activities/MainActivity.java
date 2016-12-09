@@ -280,6 +280,9 @@ public class MainActivity extends AppCompatActivity {
         case Constants.NOTIFICATION_ID.PPG_SERVICE:
           viewPager.setCurrentItem(PAGES.PPG_DATA.getPageNumber());
           break;
+        case Constants.NOTIFICATION_ID.BE_ACTIVE_SERVICE:
+          viewPager.setCurrentItem(PAGES.BE_ACTIVE.getPageNumber());
+          break;
       }
     }
   }
@@ -305,6 +308,7 @@ public class MainActivity extends AppCompatActivity {
       if (intent.getAction() != null) {
         if (intent.getAction().equals(Constants.ACTION.BROADCAST_MESSAGE)) {
           int message = intent.getIntExtra(Constants.KEY.MESSAGE, -1);
+
           switch (message) {
             case Constants.MESSAGE.ACCELEROMETER_SERVICE_STARTED:
               showStatus(getString(R.string.accelerometer_started));
@@ -335,6 +339,12 @@ public class MainActivity extends AppCompatActivity {
               break;
             case Constants.MESSAGE.BAND_SERVICE_STOPPED:
               showStatus(getString(R.string.band_stopped));
+              break;
+            case Constants.MESSAGE.BE_ACTIVE_SERVICE_STARTED:
+              showStatus(getString(R.string.be_active_started));
+              break;
+            case Constants.MESSAGE.BE_ACTIVE_SERVICE_STOPPED:
+              showStatus(getString(R.string.be_active_stopped));
               break;
           }
         }

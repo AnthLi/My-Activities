@@ -42,6 +42,8 @@ public class Constants {
     int PPG_SERVICE = 102;
     int LOCATION_SERVICE = 103;
     int AUDIO_SERVICE = 104;
+
+    int BE_ACTIVE_SERVICE = 105;
   }
 
   /**
@@ -82,6 +84,9 @@ public class Constants {
     int PPG_SERVICE_STOPPED = 7;
     int BAND_SERVICE_STARTED = 8;
     int BAND_SERVICE_STOPPED = 9;
+
+    int BE_ACTIVE_SERVICE_STARTED = 10;
+    int BE_ACTIVE_SERVICE_STOPPED = 11;
   }
 
   /**
