@@ -21,7 +21,7 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name="cs.umass.edu.myactivitiestoolkit.MapsActivity"
+            android:name="cs.umass.edu.myactivitiestoolkit.view.activities.MapsActivity"
             android:label="@string/title_activity_maps">
 
         </activity>

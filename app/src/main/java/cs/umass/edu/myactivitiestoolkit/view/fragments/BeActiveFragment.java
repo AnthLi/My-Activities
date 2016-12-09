@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -108,7 +109,8 @@ public class BeActiveFragment extends Fragment {
         }
       }
     });
-
+//    String myHtml = "HTML CAN BE USED IF NECESSARY";
+//    txtActivity.setText(Html.fromHtml(myHtml));
     return view;
   }
 

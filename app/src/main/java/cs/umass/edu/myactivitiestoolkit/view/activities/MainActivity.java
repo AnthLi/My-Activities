@@ -18,9 +18,10 @@ import android.widget.TextView;
 
 import cs.umass.edu.myactivitiestoolkit.R;
 import cs.umass.edu.myactivitiestoolkit.constants.Constants;
+import cs.umass.edu.myactivitiestoolkit.services.BeActiveService;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.AboutFragment;
-import cs.umass.edu.myactivitiestoolkit.view.fragments.BeActiveFragment;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.AudioFragment;
+import cs.umass.edu.myactivitiestoolkit.view.fragments.BeActiveFragment;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.ExerciseFragment;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.HeartRateFragment;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.LocationsFragment;
@@ -62,6 +63,16 @@ public class MainActivity extends AppCompatActivity {
         return "My Exercise";
       }
 
+//      @Override
+//      public int getPageNumber() {
+//        return 0;
+//      }
+//    }, BE_ACTIVE(BeActiveFragment.class) {
+//      @Override
+//      public String getTitle() {
+//        return "Be Active";
+//      }
+
       @Override
       public int getPageNumber() {
         return 0;
@@ -69,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     }, BE_ACTIVE(BeActiveFragment.class) {
       @Override
       public String getTitle() {
-        return "Be Active";
+        return "Simple XY Plot Example";
       }
 
       @Override
