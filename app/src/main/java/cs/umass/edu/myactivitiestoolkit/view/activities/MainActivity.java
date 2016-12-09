@@ -20,6 +20,7 @@ import cs.umass.edu.myactivitiestoolkit.R;
 import cs.umass.edu.myactivitiestoolkit.constants.Constants;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.AboutFragment;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.BeActiveFragment;
+import cs.umass.edu.myactivitiestoolkit.view.fragments.SimpleXYFragment;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.AudioFragment;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.ExerciseFragment;
 import cs.umass.edu.myactivitiestoolkit.view.fragments.HeartRateFragment;
@@ -62,14 +63,24 @@ public class MainActivity extends AppCompatActivity {
         return "My Exercise";
       }
 
+//      @Override
+//      public int getPageNumber() {
+//        return 0;
+//      }
+//    }, BE_ACTIVE(BeActiveFragment.class) {
+//      @Override
+//      public String getTitle() {
+//        return "Be Active";
+//      }
+
       @Override
       public int getPageNumber() {
         return 0;
       }
-    }, BE_ACTIVE(BeActiveFragment.class) {
+    }, BE_ACTIVE(SimpleXYFragment.class) {
       @Override
       public String getTitle() {
-        return "Be Active";
+        return "Simple XY Plot Example";
       }
 
       @Override

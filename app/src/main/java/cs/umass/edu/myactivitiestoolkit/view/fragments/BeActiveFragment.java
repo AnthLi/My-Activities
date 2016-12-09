@@ -12,6 +12,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringDef;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -100,7 +101,8 @@ public class BeActiveFragment extends Fragment {
         }
       }
     });
-
+//    String myHtml = "HTML CAN BE USED IF NECESSARY";
+//    txtActivity.setText(Html.fromHtml(myHtml));
     return view;
   }
 
