@@ -1,66 +1,37 @@
 package cs.umass.edu.myactivitiestoolkit.view.fragments;
 
-
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.EmbossMaskFilter;
+import android.graphics.PointF;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.StringDef;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.Html;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import com.androidplot.pie.PieChart;
-import com.androidplot.util.PixelUtils;
-import com.androidplot.xy.BoundaryMode;
-import com.androidplot.xy.LineAndPointFormatter;
-import com.androidplot.xy.SimpleXYSeries;
-import com.androidplot.xy.StepMode;
-import com.androidplot.xy.XYGraphWidget;
-import com.androidplot.xy.XYPlot;
-import com.androidplot.xy.XYSeries;
-
-import java.text.FieldPosition;
-import java.text.Format;
-import java.text.ParsePosition;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Queue;
-import java.util.concurrent.RunnableFuture;
-
-import cs.umass.edu.myactivitiestoolkit.R;
-import cs.umass.edu.myactivitiestoolkit.constants.Constants;
-import cs.umass.edu.myactivitiestoolkit.services.msband.BandService;
-import cs.umass.edu.myactivitiestoolkit.services.AccelerometerService;
-import cs.umass.edu.myactivitiestoolkit.services.ServiceManager;
-
-import android.app.Activity;
-import android.graphics.*;
-import android.os.Bundle;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.SeekBar;
-import android.widget.TextView;
-import com.androidplot.pie.PieChart;
 import com.androidplot.pie.PieRenderer;
 import com.androidplot.pie.Segment;
 import com.androidplot.pie.SegmentFormatter;
-import com.androidplot.util.*;
+import com.androidplot.util.PixelUtils;
 
-import java.util.*;
+import cs.umass.edu.myactivitiestoolkit.R;
+import cs.umass.edu.myactivitiestoolkit.constants.Constants;
+import cs.umass.edu.myactivitiestoolkit.services.BeActiveService;
+import cs.umass.edu.myactivitiestoolkit.services.ServiceManager;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BeActiveFragment extends Fragment {
 
@@ -82,6 +53,12 @@ public class BeActiveFragment extends Fragment {
   private List<Long> activeTimestamps = new ArrayList<>();
 
   private ServiceManager mServiceManager;
+
+  private static final int SELECTED_SEGMENT_OFFSET = 50;
+
+  private TextView pieChartSizeTextView;
+
+  private SeekBar pieChartSizeSeekBar;
 
   private final BroadcastReceiver receiver = new BroadcastReceiver() {
     @Override
@@ -126,94 +103,102 @@ public class BeActiveFragment extends Fragment {
     this.mServiceManager = ServiceManager.getInstance(getActivity());
   }
 
-  public static final int SELECTED_SEGMENT_OFFSET = 50;
-
-  private TextView donutSizeTextView;
-  private SeekBar donutSizeSeekBar;
-
-  public PieChart pie;
-
-  private Segment s1;
-  private Segment s2;
-  private Segment s3;
-  private Segment s4;
-
   @Override
-  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState
-  ) {
-
+  public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     final View view = inflater.inflate(R.layout.fragment_be_active, container, false);
 
+    txtActivity = (TextView)view.findViewById(R.id.txtActivity);
+
     // initialize our XYPlot reference:
-    pie = (PieChart) view.findViewById(R.id.mySimplePieChart);
+    pieChart = (PieChart)view.findViewById(R.id.beActivePieChart);
+
+    switchBeActive = (Switch)view.findViewById(R.id.switchBeActive);
+    switchBeActive.setChecked(mServiceManager.isServiceRunning(BeActiveService.class));
+    switchBeActive.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton compoundButton, boolean enabled) {
+        if (enabled) {
+          clearPlotData();
+          mServiceManager.startSensorService(BeActiveService.class);
+        }
+        else {
+          mServiceManager.stopSensorService(BeActiveService.class);
+        }
+      }
+    });
 
     final float padding = PixelUtils.dpToPix(30);
-    pie.getPie().setPadding(padding, padding, padding, padding);
+    pieChart.getPie().setPadding(padding, padding, padding, padding);
 
     // detect segment clicks:
-    pie.setOnTouchListener(new View.OnTouchListener() {
+    pieChart.setOnTouchListener(new View.OnTouchListener() {
       @Override
       public boolean onTouch(View view, MotionEvent motionEvent) {
         PointF click = new PointF(motionEvent.getX(), motionEvent.getY());
-        if(pie.getPie().containsPoint(click)) {
-          Segment segment = pie.getRenderer(PieRenderer.class).getContainingSegment(click);
+        if (pieChart.getPie().containsPoint(click)) {
+          Segment segment = pieChart.getRenderer(PieRenderer.class).getContainingSegment(click);
           final boolean isSelected = getFormatter(segment).getOffset() != 0;
           deselectAll();
           setSelected(segment, !isSelected);
-          pie.redraw();
+          pieChart.redraw();
         }
         return false;
       }
 
       private SegmentFormatter getFormatter(Segment segment) {
-        return pie.getFormatter(segment, PieRenderer.class);
+        return pieChart.getFormatter(segment, PieRenderer.class);
       }
 
       private void deselectAll() {
-        List<Segment> segments = pie.getRegistry().getSeriesList();
-        for(Segment segment : segments) {
+        List<Segment> segments = pieChart.getRegistry().getSeriesList();
+        for (Segment segment : segments) {
           setSelected(segment, false);
         }
       }
 
       private void setSelected(Segment segment, boolean isSelected) {
         SegmentFormatter f = getFormatter(segment);
-        if(isSelected) {
+        if (isSelected) {
           f.setOffset(SELECTED_SEGMENT_OFFSET);
-        } else {
+        }
+        else {
           f.setOffset(0);
         }
       }
     });
 
-    donutSizeSeekBar = (SeekBar) view.findViewById(R.id.donutSizeSeekBar);
-    donutSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+    pieChartSizeSeekBar = (SeekBar)view.findViewById(R.id.pieChartSizeSeekBar);
+    pieChartSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
       @Override
-      public void onProgressChanged(SeekBar seekBar, int i, boolean b) {}
+      public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+      }
 
       @Override
-      public void onStartTrackingTouch(SeekBar seekBar) {}
+      public void onStartTrackingTouch(SeekBar seekBar) {
+      }
 
       @Override
       public void onStopTrackingTouch(SeekBar seekBar) {
-        pie.getRenderer(PieRenderer.class).setDonutSize(seekBar.getProgress()/100f,
-                PieRenderer.DonutMode.PERCENT);
-        pie.redraw();
-        updateDonutText();
+        pieChart.getRenderer(PieRenderer.class).setDonutSize(
+          seekBar.getProgress() / 100f,
+          PieRenderer.DonutMode.PERCENT
+        );
+
+        pieChart.redraw();
+        updatePieChartText();
       }
     });
 
-    donutSizeTextView = (TextView) view.findViewById(R.id.donutSizeTextView);
-    updateDonutText();
+    pieChartSizeTextView = (TextView)view.findViewById(R.id.pieChartSizeTextView);
+    updatePieChartText();
 
-    s1 = new Segment("s1", 3);
-    s2 = new Segment("s2", 1);
-    s3 = new Segment("s3", 7);
-    s4 = new Segment("s4", 9);
+    Segment s1 = new Segment("s1", 3);
+    Segment s2 = new Segment("s2", 1);
+    Segment s3 = new Segment("s3", 7);
+    Segment s4 = new Segment("s4", 9);
 
-    EmbossMaskFilter emf = new EmbossMaskFilter(
-            new float[]{1, 1, 1}, 0.4f, 10, 8.2f);
+    EmbossMaskFilter emf = new EmbossMaskFilter(new float[]{1, 1, 1}, 0.4f, 10, 8.2f);
 
     SegmentFormatter sf1 = new SegmentFormatter(R.xml.pie_segment_formatter1);
     sf1.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
@@ -231,19 +216,15 @@ public class BeActiveFragment extends Fragment {
     sf4.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
     sf4.getFillPaint().setMaskFilter(emf);
 
-    pie.addSegment(s1, sf1);
-    pie.addSegment(s2, sf2);
-    pie.addSegment(s3, sf3);
-    pie.addSegment(s4, sf4);
+    pieChart.addSegment(s1, sf1);
+    pieChart.addSegment(s2, sf2);
+    pieChart.addSegment(s3, sf3);
+    pieChart.addSegment(s4, sf4);
 
-    pie.getBorderPaint().setColor(Color.TRANSPARENT);
-    pie.getBackgroundPaint().setColor(Color.TRANSPARENT);
+    pieChart.getBorderPaint().setColor(Color.TRANSPARENT);
+    pieChart.getBackgroundPaint().setColor(Color.TRANSPARENT);
 
     return view;
-  }
-
-  protected void updateDonutText() {
-    donutSizeTextView.setText(donutSizeSeekBar.getProgress() + "%");
   }
 
   @Override
@@ -275,7 +256,12 @@ public class BeActiveFragment extends Fragment {
 
   }
 
+  private void updatePieChartText() {
+    String text = pieChartSizeSeekBar.getProgress() + "%";
+    pieChartSizeTextView.setText(text);
+  }
+
   private void clearPlotData() {
-//    pieChart.clear();
+    //    pieChart.clear();
   }
 }
