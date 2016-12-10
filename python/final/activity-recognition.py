@@ -18,6 +18,7 @@ import json
 import threading
 import numpy as np
 import pickle
+import time
 from features import extract_features
 from util import reorient, reset_vars
 
@@ -43,6 +44,8 @@ if classifier == None:
   print("Classifier is null; make sure you have trained it!")
   sys.exit()
 
+class_names = ["Sedentary", "Active"]
+
 def onActivityDetected(activity):
   '''
   Notifies the client of the current activity
@@ -53,11 +56,9 @@ def onActivityDetected(activity):
     "message": "ACTIVITY_DETECTED",
     "data": {
       "activity": activity,
-      "timestamp":
+      "timestamp": time.time() * 1000
     }
   }) + "\n")
-
-class_names = ["Sedentary", "Active"]
 
 def predict(window):
   print("Buffer filled. Run your classifier.")
@@ -65,6 +66,8 @@ def predict(window):
   x = extract_features(window)
   label = int(classifier.predict(x)[0])
   onActivityDetected(class_names[label])
+
+  print time.time()
 
   return
 

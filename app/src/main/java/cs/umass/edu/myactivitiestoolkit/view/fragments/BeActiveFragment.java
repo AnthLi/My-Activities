@@ -38,27 +38,29 @@ public class BeActiveFragment extends Fragment {
   @SuppressWarnings("unused")
   private static final String TAG = ExerciseFragment.class.getName();
 
-  private Switch switchBeActive;
+  private static final int SELECTED_SEGMENT_OFFSET = 50;
 
-  // Text view used to display the current activity performed by the user
-  private TextView txtActivity;
+  private ServiceManager mServiceManager;
+
+  private View activityIcon;
+
+  private TextView textActivity;
+
+  private Switch switchBeActive;
 
   // Pie chart to display the ratio between sedentary and active
   private PieChart pieChart;
 
-  // List containing the timestamps associated with sitting
-  private List<Long> sittingTimestamps = new ArrayList<>();
-
-  // List containing the timestamps associated with being active
-  private List<Long> activeTimestamps = new ArrayList<>();
-
-  private ServiceManager mServiceManager;
-
-  private static final int SELECTED_SEGMENT_OFFSET = 50;
-
   private TextView pieChartSizeTextView;
 
   private SeekBar pieChartSizeSeekBar;
+
+  // List containing the timestamps associated with sitting
+  private ArrayList<Long> sedentaryTimestamps = new ArrayList<>();
+
+  private int sedentaryCount = 0;
+
+  private int activeCount = 0;
 
   private final BroadcastReceiver receiver = new BroadcastReceiver() {
     @Override
@@ -83,13 +85,35 @@ public class BeActiveFragment extends Fragment {
           String activity = intent.getStringExtra(Constants.KEY.BE_ACTIVE_ACTIVITY);
           long timestamp = intent.getLongExtra(Constants.KEY.BE_ACTIVE_TIMESTAMP, -1);
 
-          //displayActivity(activity);
+          displayActivity(activity);
 
-          if (activity.equals("active")) {
-            sittingTimestamps.add(timestamp);
-          }
-          else if (activity.equals("sedentary")) {
-            activeTimestamps.add(timestamp);
+          switch (activity) {
+            case "Sedentary":
+              activityIcon.setBackgroundResource(R.drawable.ic_sitting_black_48dp);
+              textActivity.setText(R.string.be_active_sedentary);
+
+              ++sedentaryCount;
+
+              if (sedentaryTimestamps.size() > 0) {
+                Long start = sedentaryTimestamps.get(0);
+
+                if (timestamp - start >= 60 * 1000) {
+                  System.out.println("A minute has passed!");
+                }
+              }
+              else {
+                sedentaryTimestamps.add(timestamp);
+              }
+
+              break;
+
+            case "Active":
+              activityIcon.setBackgroundResource(R.drawable.ic_running_black_48dp);
+              textActivity.setText(R.string.be_active_active);
+
+              ++activeCount;
+
+              break;
           }
 
           break;
@@ -108,12 +132,11 @@ public class BeActiveFragment extends Fragment {
     super.onCreate(savedInstanceState);
     final View view = inflater.inflate(R.layout.fragment_be_active, container, false);
 
-    txtActivity = (TextView)view.findViewById(R.id.txtActivity);
-
-    // initialize our XYPlot reference:
+    activityIcon = view.findViewById(R.id.activityIcon);
+    textActivity = (TextView)view.findViewById(R.id.textActivity);
+    switchBeActive = (Switch)view.findViewById(R.id.switchBeActive);
     pieChart = (PieChart)view.findViewById(R.id.beActivePieChart);
 
-    switchBeActive = (Switch)view.findViewById(R.id.switchBeActive);
     switchBeActive.setChecked(mServiceManager.isServiceRunning(BeActiveService.class));
     switchBeActive.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
       @Override
@@ -123,6 +146,8 @@ public class BeActiveFragment extends Fragment {
           mServiceManager.startSensorService(BeActiveService.class);
         }
         else {
+          activityIcon.setBackgroundResource(R.drawable.ic_more_horiz_black_48dp);
+          textActivity.setText(R.string.be_active_initial);
           mServiceManager.stopSensorService(BeActiveService.class);
         }
       }
@@ -247,10 +272,14 @@ public class BeActiveFragment extends Fragment {
   }
 
   private void displayActivity(final String activity) {
+    if (getActivity() == null) {
+      return;
+    }
+
     getActivity().runOnUiThread(new Runnable() {
       @Override
       public void run() {
-         txtActivity.setText(activity);
+         textActivity.setText(activity);
       }
     });
   }

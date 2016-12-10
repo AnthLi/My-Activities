@@ -60,15 +60,9 @@ feature_names = [
   # 11
   "std Mag",
   # 12, 13, 14
-  "zCross X", "zCross Y", "zCross Z",
-  # 15, 16, 17
   "min X", "min Y", "min Z",
-  # 18, 19, 20
-  "max X", "max Y", "max Z",
-  # 21, 22, 23, 24, 25, 26, 27, 28, 29
-  "ff1", "ff2", "ff3", "ff4", "ff5", "ff6", "ff7", "ff8", "ff9",
-  # 30
-  "entropy"
+  # 15, 16, 17
+  "max X", "max Y", "max Z"
 ]
 
 class_names = ["Sedentary", "Active"]
@@ -99,18 +93,20 @@ sys.stdout.flush()
 print("Plotting data points...")
 sys.stdout.flush()
 plt.figure()
-formats = ["bo", "go"]
-# for i in range(0, len(y), 10): # only plot 1/10th of the points, it"s a lot of data!
-  # plt.plot(X[i, 3], X[i, 8], formats[int(y[i])])
-  # plt.plot(X[i, 7], X[i, 8], formats[int(y[i])])
-  # plt.plot(X[i, 8], X[i, 11], formats[int(y[i])])
+formats = ["ro", "bo"]
+for i in range(0, len(y)):
+  # plt.plot(X[i, 6], X[i, 17], formats[int(y[i])])
+  # plt.plot(X[i, 7], X[i, 17], formats[int(y[i])])
+  # plt.plot(X[i, 8], X[i, 17], formats[int(y[i])])
+  plt.plot(X[i, 17], X[i, 11], formats[int(y[i])])
 
-# plt.show()
+plt.show()
 
 # Train & Evaluate Classifier
 n = len(y)
 n_classes = len(class_names)
 cv = cross_validation.KFold(n, n_folds = 10, shuffle = True, random_state = None)
+tree = DecisionTreeClassifier(criterion = "entropy", max_depth = 3, max_features = 10)
 
 accuracy = 0
 precision = [0, 0]
@@ -146,9 +142,6 @@ for i, (train_indexes, test_indexes) in enumerate(cv):
 print "Average accuracy:", accuracy / 10
 print "Average precision:", [p / 10 for p in precision]
 print "Average recall:", [r / 10 for r in recall]
-
-tree = DecisionTreeClassifier(criterion = "entropy", max_depth = 5, max_features = 30)
-_train_and_evaluate_classifier(tree)
 
 best_classifier = tree
 with open("data/classifier.pickle", "wb") as f:

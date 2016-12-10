@@ -55,9 +55,9 @@
   <string name="be_active_started">Activity Monitor Started</string>
   <string name="be_active_stopped">Activity Monitor Stopped</string>
 
-  <string name="be_active_initial">Detecting...</string>
+  <string name="be_active_initial">No Activity Detected</string>
   <string name="be_active_sedentary">Sedentary</string>
   <string name="be_active_active">Active</string>
 
-  <string name="text_switch_be_active">Be Active</string>
+  <string name="be_active_pie_chart_size">Chart Size</string>
 </resources>
