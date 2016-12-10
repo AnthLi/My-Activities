@@ -56,7 +56,8 @@ public class BeActiveService extends SensorService implements SensorEventListene
             long timestamp = data.getLong("timestamp");
             broadcastBeActiveDetected(activity, timestamp);
           }
-        } catch (JSONException e) {
+        }
+        catch (JSONException e) {
           e.printStackTrace();
         }
       }
@@ -122,7 +123,8 @@ public class BeActiveService extends SensorService implements SensorEventListene
         1,
         filteredFloatValues
       ));
-    } else {
+    }
+    else {
       // cannot identify sensor type
       Log.w(TAG, Constants.ERROR_MESSAGES.WARNING_SENSOR_NOT_SUPPORTED);
     }

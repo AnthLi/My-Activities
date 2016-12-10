@@ -83,14 +83,14 @@ public class BeActiveFragment extends Fragment {
           String activity = intent.getStringExtra(Constants.KEY.BE_ACTIVE_ACTIVITY);
           long timestamp = intent.getLongExtra(Constants.KEY.BE_ACTIVE_TIMESTAMP, -1);
 
+          //displayActivity(activity);
+
           if (activity.equals("active")) {
             sittingTimestamps.add(timestamp);
           }
           else if (activity.equals("sedentary")) {
             activeTimestamps.add(timestamp);
           }
-
-          displayActivity(activity);
 
           break;
       }
@@ -143,6 +143,7 @@ public class BeActiveFragment extends Fragment {
           setSelected(segment, !isSelected);
           pieChart.redraw();
         }
+
         return false;
       }
 
@@ -152,6 +153,7 @@ public class BeActiveFragment extends Fragment {
 
       private void deselectAll() {
         List<Segment> segments = pieChart.getRegistry().getSeriesList();
+
         for (Segment segment : segments) {
           setSelected(segment, false);
         }
@@ -159,6 +161,7 @@ public class BeActiveFragment extends Fragment {
 
       private void setSelected(Segment segment, boolean isSelected) {
         SegmentFormatter f = getFormatter(segment);
+
         if (isSelected) {
           f.setOffset(SELECTED_SEGMENT_OFFSET);
         }
@@ -247,7 +250,7 @@ public class BeActiveFragment extends Fragment {
     getActivity().runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        // txtActivity.setText(activity);
+         txtActivity.setText(activity);
       }
     });
   }
