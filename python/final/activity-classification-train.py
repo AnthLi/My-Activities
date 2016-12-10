@@ -99,55 +99,55 @@ sys.stdout.flush()
 print("Plotting data points...")
 sys.stdout.flush()
 plt.figure()
-formats = ["bo", "go"]
-# for i in range(0, len(y), 10): # only plot 1/10th of the points, it"s a lot of data!
-  # plt.plot(X[i, 3], X[i, 8], formats[int(y[i])])
+formats = ["bo", "go", "ro", "mo"]
+for i in range(0, len(y), 1): 
+  plt.plot(X[i, 19], X[i, 11], formats[int(y[i])])
   # plt.plot(X[i, 7], X[i, 8], formats[int(y[i])])
   # plt.plot(X[i, 8], X[i, 11], formats[int(y[i])])
 
-# plt.show()
+plt.show()
 
 # Train & Evaluate Classifier
 n = len(y)
 n_classes = len(class_names)
 cv = cross_validation.KFold(n, n_folds = 10, shuffle = True, random_state = None)
 
-accuracy = 0
-precision = [0, 0]
-recall = [0, 0]
+def _train_and_evaluate_classifier(classifier):
+  acc = 0
+  avgPrec = [0,0]
+  avgRecall = [0,0]
 
-# Calculate average accuracy, precision, and recall
-for i, (train_indexes, test_indexes) in enumerate(cv):
-  X_train = X[train_indexes, :]
-  y_train = y[train_indexes]
-  X_test = X[test_indexes, :]
-  y_test = y[test_indexes]
-  tree.fit(X_train, y_train)
+  for i, (train_indexes, test_indexes) in enumerate(cv):
+    X_train = X[train_indexes, :]
+    y_train = y[train_indexes]
+    X_test = X[test_indexes, :]
+    y_test = y[test_indexes]
+    classifier.fit(X_train, y_train)
 
-  prediction = tree.predict(X_test)
-  c_matrix = confusion_matrix(y_test, prediction)
-  diag = np.diag(c_matrix)
-  totalSum = sum(sum(c_matrix)) * 1.00000
+    y_pred = classifier.predict(X_test)
+    conf = confusion_matrix(y_test, y_pred, labels = [0, 1,2,3])
+    print conf 
+    # Add up the accuracies, precisions, and recalls
+    diag = np.diag(conf)
+    localAcc = 0
+    for d in range(0, len(diag)):
+      if conf.sum() != 0:
+        localAcc += diag[d]/(conf.sum()*1.00000)
+      if conf[:,d].sum() !=0:
+        avgPrec[d] +=  diag[d]/(1.0000* conf[:,d].sum())
+      if conf[d,:].sum() !=0:
+        avgRecall[d] += diag[d]/(1.0000*conf[d,:].sum())
+    acc += localAcc/(1.0000*len(diag))  
 
-  for x in range(0, len(diag)):
-    if totalSum != 0:
-      accuracy += c_matrix[x, x] / totalSum
+    print("Fold {}".format(i))
 
-    precisionSum = sum(c_matrix[:, x]) * 1.00000
-
-    if precisionSum != 0:
-      precision[x] += c_matrix[x, x] / precisionSum
-
-    recallSum = sum(c_matrix[x, :]) * 1.00000
-
-    if recallSum != 0:
-      recall[x] += c_matrix[x, x] / recallSum
-
-print "Average accuracy:", accuracy / 10
-print "Average precision:", [p / 10 for p in precision]
-print "Average recall:", [r / 10 for r in recall]
+  # Print the calculated averages
+  print "Average accuracy:", acc / 10
+  print "Average precision:", avgPrec[0] / 10, avgPrec[1] / 10
+  print "Average recall:", avgRecall[0] / 10, avgRecall[1] / 10
 
 tree = DecisionTreeClassifier(criterion = "entropy", max_depth = 5, max_features = 30)
+
 _train_and_evaluate_classifier(tree)
 
 best_classifier = tree
