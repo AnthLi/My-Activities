@@ -1,6 +1,5 @@
 package cs.umass.edu.myactivitiestoolkit.view.fragments;
 
-import android.app.Dialog;
 import android.app.Fragment;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -9,34 +8,33 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.graphics.EmbossMaskFilter;
-import android.graphics.PointF;
 import android.os.Bundle;
+import android.support.annotation.IntegerRes;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
-import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.androidplot.pie.PieChart;
-import com.androidplot.pie.PieRenderer;
-import com.androidplot.pie.Segment;
-import com.androidplot.pie.SegmentFormatter;
-import com.androidplot.util.PixelUtils;
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.github.mikephil.charting.utils.ColorTemplate;
 
 import cs.umass.edu.myactivitiestoolkit.R;
 import cs.umass.edu.myactivitiestoolkit.constants.Constants;
 import cs.umass.edu.myactivitiestoolkit.services.BeActiveService;
 import cs.umass.edu.myactivitiestoolkit.services.ServiceManager;
-import cs.umass.edu.myactivitiestoolkit.view.activities.MainActivity;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 
@@ -45,8 +43,6 @@ public class BeActiveFragment extends Fragment {
 
   @SuppressWarnings("unused")
   private static final String TAG = ExerciseFragment.class.getName();
-
-  private static final int SELECTED_SEGMENT_OFFSET = 50;
 
   private ServiceManager mServiceManager;
 
@@ -59,9 +55,7 @@ public class BeActiveFragment extends Fragment {
   // Pie chart to display the ratio between sedentary and active
   private PieChart pieChart;
 
-  private TextView pieChartSizeTextView;
-
-  private SeekBar pieChartSizeSeekBar;
+  private ArrayList<PieEntry> entries;
 
   // List containing the timestamps associated with sitting
   private ArrayList<Long> sedentaryTimestamps = new ArrayList<>();
@@ -101,14 +95,14 @@ public class BeActiveFragment extends Fragment {
               activityIcon.setBackgroundResource(R.drawable.ic_sitting_black_48dp);
               textActivity.setText(R.string.be_active_sedentary);
 
-              ++sedentaryCount;
+              updatePieChartData(activity, ++sedentaryCount);
 
               // If the user has been sedentary long enough, display a
               // notification telling them to move around a bit
               if (sedentaryTimestamps.size() > 0) {
                 Long start = sedentaryTimestamps.get(0);
 
-                if (timestamp - start >= 3 * 1000) {
+                if (timestamp - start >= 60 * 1000) {
                   NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                     .setSmallIcon(R.drawable.ic_sitting_white_48dp)
                     .setContentTitle("Be Active!")
@@ -138,7 +132,7 @@ public class BeActiveFragment extends Fragment {
               activityIcon.setBackgroundResource(R.drawable.ic_running_black_48dp);
               textActivity.setText(R.string.be_active_active);
 
-              ++activeCount;
+              updatePieChartData(activity, ++activeCount);
 
               // Now that the user is active, clear the list of sedentary
               // timestamps for the next time they're sedentary
@@ -168,120 +162,71 @@ public class BeActiveFragment extends Fragment {
     switchBeActive = (Switch)view.findViewById(R.id.switchBeActive);
     pieChart = (PieChart)view.findViewById(R.id.beActivePieChart);
 
+    // Configure the switch
     switchBeActive.setChecked(mServiceManager.isServiceRunning(BeActiveService.class));
     switchBeActive.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
       @Override
       public void onCheckedChanged(CompoundButton compoundButton, boolean enabled) {
         if (enabled) {
-          clearPlotData();
           mServiceManager.startSensorService(BeActiveService.class);
         }
         else {
           activityIcon.setBackgroundResource(R.drawable.ic_more_horiz_black_48dp);
           textActivity.setText(R.string.be_active_initial);
+          clearPlotData();
           mServiceManager.stopSensorService(BeActiveService.class);
         }
       }
     });
 
-    final float padding = PixelUtils.dpToPix(30);
-    pieChart.getPie().setPadding(padding, padding, padding, padding);
+    // Configure the pie chart
+    pieChart.setUsePercentValues(false);
+    pieChart.getDescription().setEnabled(false);
+    pieChart.setDrawHoleEnabled(true);
+    pieChart.setHoleColor(Color.TRANSPARENT);
+    pieChart.setHoleRadius(50);
+    pieChart.setTransparentCircleRadius(10);
+    pieChart.setRotationAngle(0);
+    pieChart.setRotationEnabled(true);
 
-    // detect segment clicks:
-    pieChart.setOnTouchListener(new View.OnTouchListener() {
+    // Add data to the pie chart
+    entries = new ArrayList<>();
+    entries.add(new PieEntry(0f, "Sedentary"));
+    entries.add(new PieEntry(0f, "Active"));
+
+    // Generate the data set for the pie chart
+    PieDataSet dataSet = new PieDataSet(entries, "");
+    dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
+    dataSet.setDrawValues(false);
+
+    pieChart.setData(new PieData(dataSet));
+
+    // Set a chart value selected listener
+    pieChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
       @Override
-      public boolean onTouch(View view, MotionEvent motionEvent) {
-        PointF click = new PointF(motionEvent.getX(), motionEvent.getY());
-        if (pieChart.getPie().containsPoint(click)) {
-          Segment segment = pieChart.getRenderer(PieRenderer.class).getContainingSegment(click);
-          final boolean isSelected = getFormatter(segment).getOffset() != 0;
-          deselectAll();
-          setSelected(segment, !isSelected);
-          pieChart.redraw();
+      public void onValueSelected(Entry e, Highlight h) {
+        if (e == null) {
+          return;
         }
 
-        return false;
-      }
-
-      private SegmentFormatter getFormatter(Segment segment) {
-        return pieChart.getFormatter(segment, PieRenderer.class);
-      }
-
-      private void deselectAll() {
-        List<Segment> segments = pieChart.getRegistry().getSeriesList();
-
-        for (Segment segment : segments) {
-          setSelected(segment, false);
-        }
-      }
-
-      private void setSelected(Segment segment, boolean isSelected) {
-        SegmentFormatter f = getFormatter(segment);
-
-        if (isSelected) {
-          f.setOffset(SELECTED_SEGMENT_OFFSET);
-        }
-        else {
-          f.setOffset(0);
-        }
-      }
-    });
-
-    pieChartSizeSeekBar = (SeekBar)view.findViewById(R.id.pieChartSizeSeekBar);
-    pieChartSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-      @Override
-      public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-      }
-
-      @Override
-      public void onStartTrackingTouch(SeekBar seekBar) {
-      }
-
-      @Override
-      public void onStopTrackingTouch(SeekBar seekBar) {
-        pieChart.getRenderer(PieRenderer.class).setDonutSize(
-          seekBar.getProgress() / 100f,
-          PieRenderer.DonutMode.PERCENT
+        // Calculate the percentage of the selected activity
+        String label = ((PieEntry)e).getLabel();
+        float percentage = Math.round(
+          (((PieEntry)e).getValue() / (sedentaryCount + activeCount)) * 100
         );
 
-        pieChart.redraw();
-        updatePieChartText();
+        // Display a toast with the activity name and percentage
+        Context context = getActivity().getApplicationContext();
+        Toast.makeText(
+          context,
+          label + ": " + percentage + "%",
+          Toast.LENGTH_SHORT
+        ).show();
       }
+
+      @Override
+      public void onNothingSelected() {}
     });
-
-    pieChartSizeTextView = (TextView)view.findViewById(R.id.pieChartSizeTextView);
-    updatePieChartText();
-
-    Segment s1 = new Segment("s1", 3);
-    Segment s2 = new Segment("s2", 1);
-    Segment s3 = new Segment("s3", 7);
-    Segment s4 = new Segment("s4", 9);
-
-    EmbossMaskFilter emf = new EmbossMaskFilter(new float[]{1, 1, 1}, 0.4f, 10, 8.2f);
-
-    SegmentFormatter sf1 = new SegmentFormatter(R.xml.pie_segment_formatter1);
-    sf1.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
-    sf1.getFillPaint().setMaskFilter(emf);
-
-    SegmentFormatter sf2 = new SegmentFormatter(R.xml.pie_segment_formatter2);
-    sf2.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
-    sf2.getFillPaint().setMaskFilter(emf);
-
-    SegmentFormatter sf3 = new SegmentFormatter(R.xml.pie_segment_formatter3);
-    sf3.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
-    sf3.getFillPaint().setMaskFilter(emf);
-
-    SegmentFormatter sf4 = new SegmentFormatter(R.xml.pie_segment_formatter4);
-    sf4.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
-    sf4.getFillPaint().setMaskFilter(emf);
-
-    pieChart.addSegment(s1, sf1);
-    pieChart.addSegment(s2, sf2);
-    pieChart.addSegment(s3, sf3);
-    pieChart.addSegment(s4, sf4);
-
-    pieChart.getBorderPaint().setColor(Color.TRANSPARENT);
-    pieChart.getBackgroundPaint().setColor(Color.TRANSPARENT);
 
     return view;
   }
@@ -315,16 +260,22 @@ public class BeActiveFragment extends Fragment {
     });
   }
 
-  private void updatePieChart() {
+  private void updatePieChartData(String label, Number number) {
+    for (int i = 0; i < entries.size(); i++) {
+      String entryLabel = entries.get(i).getLabel();
 
-  }
+      if (entryLabel.equals(label)) {
+        entries.set(i, new PieEntry(number.floatValue(), entryLabel));
+      }
+    }
 
-  private void updatePieChartText() {
-    String text = pieChartSizeSeekBar.getProgress() + "%";
-    pieChartSizeTextView.setText(text);
+    // Update the chart in real-time
+    pieChart.invalidate();
+    pieChart.notifyDataSetChanged();
   }
 
   private void clearPlotData() {
-    //    pieChart.clear();
+    sedentaryCount = 0;
+    activeCount = 0;
   }
 }
