@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.IntegerRes;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
@@ -168,12 +167,12 @@ public class BeActiveFragment extends Fragment {
       @Override
       public void onCheckedChanged(CompoundButton compoundButton, boolean enabled) {
         if (enabled) {
+          clearData();
           mServiceManager.startSensorService(BeActiveService.class);
         }
         else {
           activityIcon.setBackgroundResource(R.drawable.ic_more_horiz_black_48dp);
           textActivity.setText(R.string.be_active_initial);
-          clearPlotData();
           mServiceManager.stopSensorService(BeActiveService.class);
         }
       }
@@ -211,9 +210,9 @@ public class BeActiveFragment extends Fragment {
 
         // Calculate the percentage of the selected activity
         String label = ((PieEntry)e).getLabel();
-        float percentage = Math.round(
-          (((PieEntry)e).getValue() / (sedentaryCount + activeCount)) * 100
-        );
+        float value = ((PieEntry)e).getValue();
+        int total = sedentaryCount + activeCount;
+        float percentage = Math.round((value / total) * 100);
 
         // Display a toast with the activity name and percentage
         Context context = getActivity().getApplicationContext();
@@ -274,8 +273,14 @@ public class BeActiveFragment extends Fragment {
     pieChart.notifyDataSetChanged();
   }
 
-  private void clearPlotData() {
+  private void clearData() {
     sedentaryCount = 0;
     activeCount = 0;
+    sedentaryTimestamps.clear();
+
+    for (int i = 0; i < entries.size(); i++) {
+      String entryLabel = entries.get(i).getLabel();
+      entries.set(i, new PieEntry(0, entryLabel));
+    }
   }
 }
