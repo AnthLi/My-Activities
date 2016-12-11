@@ -92,7 +92,7 @@ public class BeActiveService extends SensorService implements SensorEventListene
 
   @Override
   protected String getNotificationContentText() {
-    return getString(R.string.activity_service_notification);
+    return getString(R.string.be_active_service_notification);
   }
 
   @Override

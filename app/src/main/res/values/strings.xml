@@ -60,4 +60,7 @@
   <string name="be_active_active">Active</string>
 
   <string name="be_active_pie_chart_size">Chart Size</string>
+
+  <string name="be_active_notification_title">Be Active!</string>
+  <string name="be_active_notification_body">Go move around a bit before sitting back down!</string>
 </resources>

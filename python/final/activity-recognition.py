@@ -61,13 +61,9 @@ def onActivityDetected(activity):
   }) + "\n")
 
 def predict(window):
-  print("Buffer filled. Run your classifier.")
-
   x = extract_features(window)
   label = int(classifier.predict(x)[0])
   onActivityDetected(class_names[label])
-
-  print time.time()
 
   return
 

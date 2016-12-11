@@ -1,6 +1,9 @@
 package cs.umass.edu.myactivitiestoolkit.view.fragments;
 
+import android.app.Dialog;
 import android.app.Fragment;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +12,7 @@ import android.graphics.Color;
 import android.graphics.EmbossMaskFilter;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -29,9 +33,13 @@ import cs.umass.edu.myactivitiestoolkit.R;
 import cs.umass.edu.myactivitiestoolkit.constants.Constants;
 import cs.umass.edu.myactivitiestoolkit.services.BeActiveService;
 import cs.umass.edu.myactivitiestoolkit.services.ServiceManager;
+import cs.umass.edu.myactivitiestoolkit.view.activities.MainActivity;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.content.Context.NOTIFICATION_SERVICE;
+
 
 public class BeActiveFragment extends Fragment {
 
@@ -87,6 +95,7 @@ public class BeActiveFragment extends Fragment {
 
           displayActivity(activity);
 
+          // Update the icon and current activity on the UI
           switch (activity) {
             case "Sedentary":
               activityIcon.setBackgroundResource(R.drawable.ic_sitting_black_48dp);
@@ -94,11 +103,29 @@ public class BeActiveFragment extends Fragment {
 
               ++sedentaryCount;
 
+              // If the user has been sedentary long enough, display a
+              // notification telling them to move around a bit
               if (sedentaryTimestamps.size() > 0) {
                 Long start = sedentaryTimestamps.get(0);
 
-                if (timestamp - start >= 60 * 1000) {
-                  System.out.println("A minute has passed!");
+                if (timestamp - start >= 3 * 1000) {
+                  NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
+                    .setSmallIcon(R.drawable.ic_sitting_white_48dp)
+                    .setContentTitle("Be Active!")
+                    .setContentText("Go move around a bit before sitting back down!");
+
+                  Intent resIntent = new Intent(context, BeActiveService.class);
+                  mBuilder.setContentIntent(PendingIntent.getActivity(
+                    context,
+                    0,
+                    resIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                  ));
+
+                  NotificationManager mNotifyMgr = (NotificationManager)context
+                    .getSystemService(NOTIFICATION_SERVICE);
+
+                  mNotifyMgr.notify(1, mBuilder.build());
                 }
               }
               else {
@@ -112,6 +139,10 @@ public class BeActiveFragment extends Fragment {
               textActivity.setText(R.string.be_active_active);
 
               ++activeCount;
+
+              // Now that the user is active, clear the list of sedentary
+              // timestamps for the next time they're sedentary
+              sedentaryTimestamps.clear();
 
               break;
           }
