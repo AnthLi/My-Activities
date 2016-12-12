@@ -87,28 +87,22 @@ public class BeActiveFragment extends Fragment {
           String activity = intent.getStringExtra(Constants.KEY.BE_ACTIVE_ACTIVITY);
           long timestamp = intent.getLongExtra(Constants.KEY.BE_ACTIVE_TIMESTAMP, -1);
 
-          displayActivity(activity);
-
           // Update the icon and current activity on the UI
           switch (activity) {
             case "Sedentary":
-
-              //if there has been no activity for 3 seconds or more clear active
-              if((System.currentTimeMillis() - activeTimestamps.get(activeTimestamps.size()-1)) >= 3000) {
-                activeTimestamps.clear();
-              }
-
-              activityIcon.setBackgroundResource(R.drawable.ic_sitting_black_48dp);
-              textActivity.setText(R.string.be_active_sedentary);
-
-              updatePieChartData(activity, ++sedentaryCount);
+              // Clear the active timestamps since the user is now sedentary
+              activeTimestamps.clear();
 
               // If the user has been sedentary long enough, display a
               // notification telling them to move around a bit
               if (sedentaryTimestamps.size() > 0) {
+                activityIcon.setBackgroundResource(R.drawable.ic_sitting_black_48dp);
+                displayActivity(activity);
+                updatePieChartData(activity, ++sedentaryCount);
+
                 Long start = sedentaryTimestamps.get(0);
 
-                if (timestamp - start >= 60 * 1000) {
+                if (timestamp - start >= 300 * 1000) {
                   NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                     .setSmallIcon(R.drawable.ic_sitting_white_48dp)
                     .setContentTitle("Be Active!")
@@ -128,26 +122,29 @@ public class BeActiveFragment extends Fragment {
                   mNotifyMgr.notify(1, mBuilder.build());
                 }
               }
-              else {
-                sedentaryTimestamps.add(timestamp);
-              }
+
+              sedentaryTimestamps.add(timestamp);
 
               break;
 
             case "Active":
-              //if active is clear this means that there was no consistent activity for more than 3 seconds
-              if(activeTimestamps.size() != 0) {
-                activityIcon.setBackgroundResource(R.drawable.ic_running_black_48dp);
-                textActivity.setText(R.string.be_active_active);
+              if (activeTimestamps.size() > 0) {
+                Long start = activeTimestamps.get(0);
 
-                updatePieChartData(activity, ++activeCount);
+                // Only mark the user as active after a period of consistent
+                // activity
+                if (timestamp - start >= 3 * 1000) {
+                  activityIcon.setBackgroundResource(R.drawable.ic_running_black_48dp);
+                  displayActivity(activity);
+                  updatePieChartData(activity, ++activeCount);
 
-                // Now that the user is active, clear the list of sedentary
-                // timestamps for the next time they're sedentary
-                sedentaryTimestamps.clear();
+                  // Now that the user is consistently active, clear the list of
+                  // sedentary timestamps
+                  sedentaryTimestamps.clear();
+                }
               }
 
-              activeTimestamps.add(System.currentTimeMillis());
+              activeTimestamps.add(timestamp);
 
               break;
           }
@@ -289,6 +286,7 @@ public class BeActiveFragment extends Fragment {
     sedentaryCount = 0;
     activeCount = 0;
     sedentaryTimestamps.clear();
+    activeTimestamps.clear();
 
     for (int i = 0; i < entries.size(); i++) {
       String entryLabel = entries.get(i).getLabel();
