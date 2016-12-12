@@ -58,6 +58,7 @@ public class BeActiveFragment extends Fragment {
 
   // List containing the timestamps associated with sitting
   private ArrayList<Long> sedentaryTimestamps = new ArrayList<>();
+  private ArrayList<Long> activeTimestamps = new ArrayList<>();
 
   private int sedentaryCount = 0;
 
@@ -91,6 +92,12 @@ public class BeActiveFragment extends Fragment {
           // Update the icon and current activity on the UI
           switch (activity) {
             case "Sedentary":
+
+              //if there has been no activity for 5 seconds or more, clear active and focus on sitting
+              if((System.currentTimeMillis() - activeTimestamps.get(activeTimestamps.size()-1)) >= 2000) {
+                activeTimestamps.clear();
+              }
+
               activityIcon.setBackgroundResource(R.drawable.ic_sitting_black_48dp);
               textActivity.setText(R.string.be_active_sedentary);
 
@@ -128,14 +135,19 @@ public class BeActiveFragment extends Fragment {
               break;
 
             case "Active":
-              activityIcon.setBackgroundResource(R.drawable.ic_running_black_48dp);
-              textActivity.setText(R.string.be_active_active);
 
-              updatePieChartData(activity, ++activeCount);
+              if(activeTimestamps.size() != 0) {
+                activityIcon.setBackgroundResource(R.drawable.ic_running_black_48dp);
+                textActivity.setText(R.string.be_active_active);
+                
+                updatePieChartData(activity, ++activeCount);
 
-              // Now that the user is active, clear the list of sedentary
-              // timestamps for the next time they're sedentary
-              sedentaryTimestamps.clear();
+                // Now that the user is active, clear the list of sedentary
+                // timestamps for the next time they're sedentary
+                sedentaryTimestamps.clear();
+              }
+
+              activeTimestamps.add(System.currentTimeMillis());
 
               break;
           }
