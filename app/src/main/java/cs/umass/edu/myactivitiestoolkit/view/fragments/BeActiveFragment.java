@@ -93,8 +93,8 @@ public class BeActiveFragment extends Fragment {
           switch (activity) {
             case "Sedentary":
 
-              //if there has been no activity for 5 seconds or more, clear active and focus on sitting
-              if((System.currentTimeMillis() - activeTimestamps.get(activeTimestamps.size()-1)) >= 2000) {
+              //if there has been no activity for 3 seconds or more clear active
+              if((System.currentTimeMillis() - activeTimestamps.get(activeTimestamps.size()-1)) >= 3000) {
                 activeTimestamps.clear();
               }
 
@@ -135,11 +135,11 @@ public class BeActiveFragment extends Fragment {
               break;
 
             case "Active":
-
+              //if active is clear this means that there was no consistent activity for more than 3 seconds
               if(activeTimestamps.size() != 0) {
                 activityIcon.setBackgroundResource(R.drawable.ic_running_black_48dp);
                 textActivity.setText(R.string.be_active_active);
-                
+
                 updatePieChartData(activity, ++activeCount);
 
                 // Now that the user is active, clear the list of sedentary
