@@ -43,6 +43,12 @@ public class BeActiveFragment extends Fragment {
   @SuppressWarnings("unused")
   private static final String TAG = ExerciseFragment.class.getName();
 
+  // The amount of time before the app notifies the user to move around
+  private static final int SEDENTARY_TIME = 300 * 1000;
+
+  // The amount of time before activity is considered consistent
+  private static final int ACTIVE_TIME = 3 * 1000;
+
   private ServiceManager mServiceManager;
 
   private View activityIcon;
@@ -102,7 +108,7 @@ public class BeActiveFragment extends Fragment {
 
                 Long start = sedentaryTimestamps.get(0);
 
-                if (timestamp - start >= 300 * 1000) {
+                if (timestamp - start >= SEDENTARY_TIME) {
                   NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                     .setSmallIcon(R.drawable.ic_sitting_white_48dp)
                     .setContentTitle("Be Active!")
@@ -133,7 +139,7 @@ public class BeActiveFragment extends Fragment {
 
                 // Only mark the user as active after a period of consistent
                 // activity
-                if (timestamp - start >= 3 * 1000) {
+                if (timestamp - start >= ACTIVE_TIME) {
                   activityIcon.setBackgroundResource(R.drawable.ic_running_black_48dp);
                   displayActivity(activity);
                   updatePieChartData(activity, ++activeCount);
